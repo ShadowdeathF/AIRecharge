@@ -1,0 +1,10 @@
+{
+  "name": "orion-key",
+  "private": true,
+  "packageManager": "pnpm@10.29.3",
+  "scripts": {
+    "dev:web": "pnpm --filter @orion-key/web dev",
+    "build:web": "pnpm --filter @orion-key/web build",
+    "lint:web": "pnpm --filter @orion-key/web lint"
+  }
+}

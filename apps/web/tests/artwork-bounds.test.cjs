@@ -1,0 +1,12 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),ts=require('typescript');
+const compiled=ts.transpileModule(fs.readFileSync(path.join(__dirname,'../lib/artwork-bounds.ts'),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText;
+const target={exports:{}};new Function('module','exports',compiled)(target,target.exports);const {detectArtworkBounds:detect}=target.exports;
+const image=(background=[240,240,240,255])=>{const data=new Uint8ClampedArray(100*100*4);for(let i=0;i<data.length;i+=4)data.set(background,i);return data;};
+const card=(data,left=20,top=30,right=79,bottom=69)=>{for(let y=top;y<=bottom;y++)for(let x=left;x<=right;x++)data.set([8,50,34,255],(y*100+x)*4);return data;};
+test('tightens a centered card with a broad light backdrop and retains a small safety margin',()=>assert.deepEqual(detect(card(image()),100,100),{x:.18,y:.28,width:.64,height:.44}));
+test('leaves a dark full-bleed image unchanged',()=>assert.equal(detect(image([8,50,34,255]),100,100),null));
+test('leaves a light image with no clear foreground unchanged',()=>assert.equal(detect(image(),100,100),null));
+test('does not crop a sparse dark illustration as if it were a filled card',()=>{const data=image();for(let i=20;i<80;i++)data.set([0,0,0,255],(i*100+i)*4);assert.equal(detect(data,100,100),null);});
+test('keeps content near the edge intact',()=>assert.equal(detect(card(image(),2,30,79,69),100,100),null));
+test('does not reinterpret transparent cutouts',()=>assert.equal(detect(card(image([0,0,0,0])),100,100),null));
+test('ignores unreadable dimensions and incomplete pixels',()=>assert.equal(detect(new Uint8ClampedArray(10),100,100),null));

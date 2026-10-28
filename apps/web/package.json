@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "test:artwork": "node --test tests/artwork-bounds.test.cjs",
     "start": "next start",
     "lint": "eslint ."
   },

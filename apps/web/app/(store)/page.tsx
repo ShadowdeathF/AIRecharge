@@ -1,4 +1,4 @@
-import { getProducts, getCategories, getSiteConfig } from "@/services/api-server"
+import { getCatalogProducts, getCategories, getSiteConfig } from "@/services/api-server"
 import { HomeContent } from "./home-content"
 import type { Metadata } from "next"
 
@@ -22,8 +22,8 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function HomePage() {
-  const [productsData, categories, config] = await Promise.all([
-    getProducts({ page: 1, page_size: 100 }).catch(() => ({ list: [] as never[], pagination: { page: 1, page_size: 100, total: 0 } })),
+  const [products, categories, config] = await Promise.all([
+    getCatalogProducts().catch(() => []),
     getCategories().catch(() => []),
     getSiteConfig().catch(() => null),
   ])
@@ -42,7 +42,7 @@ export default async function HomePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <HomeContent
-        products={productsData.list}
+        products={products}
         categories={categories}
         siteSlogan={config?.site_slogan || ""}
         siteDescription={config?.site_description || ""}

@@ -7,6 +7,7 @@
  * - 仅封装公开接口（不需要 auth token）
  */
 
+import { loadCatalogProducts } from "@/lib/catalog-pagination"
 import type {
   ApiResponse,
   PaginatedData,
@@ -63,6 +64,10 @@ export async function getProducts(params?: {
   return serverRequest<PaginatedData<ProductCard>>(
     `/products${qs ? `?${qs}` : ""}`
   )
+}
+
+export async function getCatalogProducts(): Promise<ProductCard[]> {
+  return loadCatalogProducts((page, page_size) => getProducts({ page, page_size }))
 }
 
 export async function getProductDetail(id: string): Promise<ProductDetail> {

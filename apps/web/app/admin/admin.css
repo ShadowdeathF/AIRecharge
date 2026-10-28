@@ -171,6 +171,10 @@ html:not(.dark) .admin-shell {
 .appearance-mini-hero > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: right center; z-index: -2; }
 .appearance-mini-hero h3 { font-size: 16px; font-weight: 700; max-width: 70%; line-height: 1.45; }
 .appearance-mini-hero p { margin-top: 8px; font-size: 9px; max-width: 70%; line-height: 1.7; color: #2b5342; }
+.dark .appearance-mini-hero { background: #14211c; color: #edf7f1; }
+.dark .appearance-mini-hero > img { filter: brightness(.72) saturate(.9); }
+.dark .appearance-mini-hero::after { background: linear-gradient(90deg,rgba(15,27,23,.94) 0%,rgba(15,27,23,.86) 38%,rgba(15,27,23,.54) 70%,rgba(15,27,23,.12) 100%); }
+.dark .appearance-mini-hero p { color: #c4d8cd; }
 .appearance-mini-controls { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 3px 15px 15px; font-size: 10px; color: var(--preview-accent); }
 .appearance-mini-controls button { color: white; background: var(--preview-accent); padding: 7px 11px; border-radius: 4px; }
 .appearance-mini-disabled { padding: 30px 15px; text-align: center; font-size: 11px; color: #708097; }

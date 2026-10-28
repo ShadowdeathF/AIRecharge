@@ -1,12 +1,18 @@
 "use client"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react"
 import { Search, SlidersHorizontal, ShoppingCart, CreditCard, Mail, ChevronRight, X } from "lucide-react"
 import { useLocale, useSiteConfig, useSearch, type SortKey } from "@/lib/context"
 import { ProductCard } from "@/components/store/product-card"
+import { CatalogPagination } from "@/components/store/catalog-pagination"
+import { paginateCatalog } from "@/lib/catalog-pagination"
 import { cn } from "@/lib/utils"
 import type { ProductCard as Product, Category } from "@/types"
 
 interface HomeContentProps { products: Product[]; categories: Category[]; siteSlogan: string; siteDescription: string }
+const mobileQuery = "(max-width: 600px)"
+const subscribeMobile = (callback: () => void) => { const query = window.matchMedia(mobileQuery); query.addEventListener("change", callback); return () => query.removeEventListener("change", callback) }
+const getMobile = () => window.matchMedia(mobileQuery).matches
+const getServerMobile = () => false
 
 export function HomeContent({ products, categories, siteSlogan, siteDescription }: HomeContentProps) {
   const { locale, t } = useLocale()
@@ -15,6 +21,11 @@ export function HomeContent({ products, categories, siteSlogan, siteDescription 
   const { searchQuery, setSearchQuery, sortBy, setSortBy, inStockOnly, setInStockOnly, priceMin, setPriceMin, priceMax, setPriceMax } = useSearch()
   const [category, setCategory] = useState<string | null>(null)
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const [page, setPage] = useState(1)
+  const catalog = useRef<HTMLElement>(null)
+  const mobile = useSyncExternalStore(subscribeMobile, getMobile, getServerMobile)
+  const pageSize = mobile ? 3 : 6
+  useEffect(() => setPage(1), [category, searchQuery, sortBy, inStockOnly, priceMin, priceMax, pageSize])
   const filtered = useMemo(() => {
     let result = products.filter(p => (!category || p.category_id === category) && (!searchQuery.trim() || p.title.toLowerCase().includes(searchQuery.trim().toLowerCase())) && (!inStockOnly || p.stock_available > 0))
     const min = Number.parseFloat(priceMin), max = Number.parseFloat(priceMax)
@@ -33,6 +44,11 @@ export function HomeContent({ products, categories, siteSlogan, siteDescription 
   // Search, filters and explicit sorting keep every matching result compact and in order.
   const featured = filtered.length > 1 && sortBy === "default" && !searchQuery.trim() && !activeFilters ? filtered[0] : null
   const compactProducts = featured ? filtered.slice(1) : filtered
+  const pagination = paginateCatalog(compactProducts, page, pageSize)
+  const changePage = (next: number) => {
+    setPage(next)
+    catalog.current?.scrollIntoView({ block: "start", behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" })
+  }
   const reset = () => { setCategory(null); setSearchQuery(""); setInStockOnly(false); setPriceMin(""); setPriceMax(""); setSortBy("default") }
   // The local starter's generic English copy is replaced, merchant-written copy is preserved.
   const heading = !siteSlogan || siteSlogan === "Instant Keys, Anytime" ? (zh ? "你的下一份 AI 生产力。" : "Your next AI advantage.") : siteSlogan
@@ -51,7 +67,7 @@ export function HomeContent({ products, categories, siteSlogan, siteDescription 
     {config?.hero_enabled !== false && <section className="store-hero" data-testid="store-hero">
       {config?.hero_link_url ? <a href={config.hero_link_url} className="block h-full" aria-label={zh ? "查看横幅推荐" : "Explore featured content"}>{heroContent}</a> : heroContent}
     </section>}
-    <section id="catalog" className="store-catalog" aria-label={zh ? "商品目录" : "Product catalog"}>
+    <section ref={catalog} id="catalog" className="store-catalog" aria-label={zh ? "商品目录" : "Product catalog"}>
       <div className="store-catalog-toolbar">
         <div className="store-categories" role="group" aria-label={zh ? "商品分类" : "Categories"}>
           <button type="button" onClick={() => setCategory(null)} aria-pressed={!category} className={cn(!category && "active")}>{t("home.allCategories")}</button>
@@ -71,10 +87,11 @@ export function HomeContent({ products, categories, siteSlogan, siteDescription 
       </div>}
       {filtered.length > 0 ? <div className={cn("store-merchandise", !featured && "store-merchandise-compact")} data-testid="catalog-grid">
         {featured && <ProductCard product={featured} featured priority />}
-        <div className={cn("store-product-list", compactProducts.length <= 3 && "store-product-list-short")}>
-          {compactProducts.map((product, index) => <ProductCard key={product.id} product={product} priority={!featured && index === 0} />)}
+        <div className={cn("store-product-list", compactProducts.length <= 3 && "store-product-list-short", featured && pagination.totalPages > 1 && "store-product-list-paged")}>
+          {pagination.items.map((product, index) => <ProductCard key={product.id} product={product} priority={!featured && index === 0} />)}
         </div>
       </div> : <div className="store-empty" data-testid="catalog-empty"><Search size={36} strokeWidth={1.3} /><h2>{t("home.noProducts")}</h2><p>{zh ? "试试其他关键词，或调整筛选条件。" : "Try another keyword or adjust your filters."}</p><button type="button" onClick={reset}>{zh ? "重置筛选" : "Reset filters"}</button></div>}
+      <CatalogPagination page={pagination.page} totalPages={pagination.totalPages} totalProducts={filtered.length} mobile={mobile} featured={Boolean(featured)} onPage={changePage} />
     </section>
     <section className="store-purchase-steps" aria-label={zh ? "购买流程" : "How it works"}>
       {steps.map((step,i) => <div className="store-step" key={step.title}><span className="store-step-icon"><step.icon size={23} strokeWidth={1.7} /></span><div><h3><span>{i+1}</span>{step.title}</h3><p>{step.detail}</p></div>{i<2 && <ChevronRight className="store-step-arrow" size={17} />}</div>)}

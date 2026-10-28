@@ -28,8 +28,6 @@ export function HomeContent({ products, categories, siteSlogan, siteDescription 
     }
     return result
   }, [products, category, searchQuery, inStockOnly, priceMin, priceMax, sortBy])
-  const featured = sortBy === "default" ? filtered.find(p => /chatgpt|openai/i.test(p.title)) || filtered[0] : filtered[0]
-  const otherProducts = filtered.filter(p => p.id !== featured?.id)
   const activeFilters = Boolean(inStockOnly || priceMin || priceMax)
   const reset = () => { setCategory(null); setSearchQuery(""); setInStockOnly(false); setPriceMin(""); setPriceMax(""); setSortBy("default") }
   // The local starter's generic English copy is replaced, merchant-written copy is preserved.
@@ -53,7 +51,7 @@ export function HomeContent({ products, categories, siteSlogan, siteDescription 
       <div className="store-catalog-toolbar">
         <div className="store-categories" role="group" aria-label={zh ? "商品分类" : "Categories"}>
           <button type="button" onClick={() => setCategory(null)} aria-pressed={!category} className={cn(!category && "active")}>{t("home.allCategories")}</button>
-          {categories.map(cat => <button type="button" key={cat.id} onClick={() => setCategory(category === cat.id ? null : cat.id)} aria-pressed={category === cat.id} className={cn(category === cat.id && "active")}>{cat.name}</button>)}
+          {categories.map(cat => <button type="button" key={cat.id} onClick={() => setCategory(cat.id)} aria-pressed={category === cat.id} className={cn(category === cat.id && "active")}>{cat.name}</button>)}
         </div>
         <div className="store-catalog-actions">
           <label className="store-catalog-search"><Search size={16} aria-hidden="true" /><input type="search" aria-label={zh ? "搜索商品" : "Search products"} placeholder={zh ? "搜索商品名称" : "Search products"} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} /></label>
@@ -67,9 +65,8 @@ export function HomeContent({ products, categories, siteSlogan, siteDescription 
         <label className="store-stock-filter"><input type="checkbox" checked={inStockOnly} onChange={e => setInStockOnly(e.target.checked)} />{t("home.filterInStock")}</label>
         <button type="button" className="store-reset" onClick={reset}><X size={15} />{zh ? "重置筛选" : "Reset filters"}</button>
       </div>}
-      {featured ? <div className={cn("store-merchandise", !otherProducts.length && "store-merchandise-single")}>
-        <ProductCard product={featured} featured />
-        {otherProducts.length > 0 && <div className="store-product-list">{otherProducts.map(p => <ProductCard key={p.id} product={p} />)}</div>}
+      {filtered.length > 0 ? <div className="store-merchandise" data-testid="catalog-grid">
+        {filtered.map((product, index) => <ProductCard key={product.id} product={product} priority={index === 0} />)}
       </div> : <div className="store-empty" data-testid="catalog-empty"><Search size={36} strokeWidth={1.3} /><h2>{t("home.noProducts")}</h2><p>{zh ? "试试其他关键词，或调整筛选条件。" : "Try another keyword or adjust your filters."}</p><button type="button" onClick={reset}>{zh ? "重置筛选" : "Reset filters"}</button></div>}
     </section>
     <section className="store-purchase-steps" aria-label={zh ? "购买流程" : "How it works"}>

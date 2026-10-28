@@ -29,6 +29,10 @@ export function HomeContent({ products, categories, siteSlogan, siteDescription 
     return result
   }, [products, category, searchQuery, inStockOnly, priceMin, priceMax, sortBy])
   const activeFilters = Boolean(inStockOnly || priceMin || priceMax)
+  // Default merchandising follows the merchant's product order within each category.
+  // Search, filters and explicit sorting keep every matching result compact and in order.
+  const featured = filtered.length > 1 && sortBy === "default" && !searchQuery.trim() && !activeFilters ? filtered[0] : null
+  const compactProducts = featured ? filtered.slice(1) : filtered
   const reset = () => { setCategory(null); setSearchQuery(""); setInStockOnly(false); setPriceMin(""); setPriceMax(""); setSortBy("default") }
   // The local starter's generic English copy is replaced, merchant-written copy is preserved.
   const heading = !siteSlogan || siteSlogan === "Instant Keys, Anytime" ? (zh ? "你的下一份 AI 生产力。" : "Your next AI advantage.") : siteSlogan
@@ -65,8 +69,11 @@ export function HomeContent({ products, categories, siteSlogan, siteDescription 
         <label className="store-stock-filter"><input type="checkbox" checked={inStockOnly} onChange={e => setInStockOnly(e.target.checked)} />{t("home.filterInStock")}</label>
         <button type="button" className="store-reset" onClick={reset}><X size={15} />{zh ? "重置筛选" : "Reset filters"}</button>
       </div>}
-      {filtered.length > 0 ? <div className="store-merchandise" data-testid="catalog-grid">
-        {filtered.map((product, index) => <ProductCard key={product.id} product={product} priority={index === 0} />)}
+      {filtered.length > 0 ? <div className={cn("store-merchandise", !featured && "store-merchandise-compact")} data-testid="catalog-grid">
+        {featured && <ProductCard product={featured} featured priority />}
+        <div className={cn("store-product-list", compactProducts.length <= 3 && "store-product-list-short")}>
+          {compactProducts.map((product, index) => <ProductCard key={product.id} product={product} priority={!featured && index === 0} />)}
+        </div>
       </div> : <div className="store-empty" data-testid="catalog-empty"><Search size={36} strokeWidth={1.3} /><h2>{t("home.noProducts")}</h2><p>{zh ? "试试其他关键词，或调整筛选条件。" : "Try another keyword or adjust your filters."}</p><button type="button" onClick={reset}>{zh ? "重置筛选" : "Reset filters"}</button></div>}
     </section>
     <section className="store-purchase-steps" aria-label={zh ? "购买流程" : "How it works"}>

@@ -407,6 +407,23 @@ export const adminDashboardApi = {
   },
 }
 
+export const adminWorkbenchApi = {
+  overview: (params: import("@/types/workbench").WorkbenchFilters) =>
+    request<import("@/types/workbench").WorkbenchOverview>(`/admin/workbench/overview?${buildQuery({ ...params })}`),
+  orders: (params: import("@/types/workbench").WorkbenchFilters & { page?: number; page_size?: number }) =>
+    request<import("@/types/workbench").WorkbenchLedger>(`/admin/workbench/orders?${buildQuery({ ...params })}`),
+  exportCsv: async (params: import("@/types/workbench").WorkbenchFilters & { ids?: string }) => {
+    const token = getToken()
+    const response = await fetch(`${API_BASE}/admin/workbench/export?${buildQuery({ ...params })}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+    if (response.status === 401) handleUnauthorized()
+    if (!response.ok) {
+      const error = await response.json().catch(() => null)
+      throw new Error(error?.message || `Export failed (${response.status})`)
+    }
+    return response.blob()
+  },
+}
+
 // ============================================================
 // Admin Product
 // ============================================================

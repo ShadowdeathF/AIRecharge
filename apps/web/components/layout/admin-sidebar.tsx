@@ -1,17 +1,18 @@
 "use client"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Box, LayoutDashboard, ShoppingCart, Package, KeyRound, Users, Palette, CreditCard, Settings, ShieldCheck, ScrollText, FolderTree, ChevronLeft, X, LogOut, ExternalLink } from "lucide-react"
+import { Box, LayoutDashboard, ShoppingCart, Package, KeyRound, Users, Palette, CreditCard, Settings, ShieldCheck, ScrollText, FolderTree, ChevronLeft, X, LogOut, ExternalLink, ChartNoAxesCombined } from "lucide-react"
 import { useAuth, useLocale, useSiteConfig } from "@/lib/context"
 import { cn } from "@/lib/utils"
 
 export const ADMIN_LINKS = [
-  { href: "/admin/dashboard", zh: "仪表盘", en: "Dashboard", icon: LayoutDashboard },
+  { href: "/admin/dashboard", zh: "经营分析", en: "Business overview", icon: LayoutDashboard },
   { href: "/admin/orders", zh: "订单管理", en: "Orders", icon: ShoppingCart },
   { href: "/admin/products", zh: "商品管理", en: "Products", icon: Package },
   { href: "/admin/categories", zh: "商品分类", en: "Categories", icon: FolderTree },
   { href: "/admin/card-keys", zh: "卡密库存", en: "Inventory", icon: KeyRound },
   { href: "/admin/users", zh: "用户管理", en: "Users", icon: Users },
+  { href: "/admin/dashboard#workbench-ledger", zh: "对账报表", en: "Transaction ledger", icon: ChartNoAxesCombined },
   { href: "/admin/appearance", zh: "站点外观", en: "Site appearance", icon: Palette },
   { href: "/admin/payment-channels", zh: "支付渠道", en: "Payments", icon: CreditCard },
   { href: "/admin/site-config", zh: "网站设置", en: "Site settings", icon: Settings },

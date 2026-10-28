@@ -2,13 +2,14 @@
 import { useEffect, useState, type ReactNode } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Menu, Sun, Moon, Monitor, Globe, ExternalLink, User } from "lucide-react"
+import { Menu, Search, Globe, ExternalLink, User } from "lucide-react"
 import { AdminSidebar, ADMIN_LINKS } from "./admin-sidebar"
 import { useAuth, useLocale, useTheme } from "@/lib/context"
 import { cn } from "@/lib/utils"
 export function AdminShell({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [search, setSearch] = useState("")
   const { locale, setLocale } = useLocale()
   const { theme, setTheme } = useTheme()
   const { user } = useAuth()
@@ -30,6 +31,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
       <header className="admin-topbar">
         <button type="button" className="admin-mobile-toggle" onClick={() => setMobileOpen(true)} aria-label={zh ? "打开导航" : "Open navigation"} aria-expanded={mobileOpen} aria-controls="admin-navigation"><Menu size={21} /></button>
         <div className="admin-breadcrumb"><span>{zh ? "工作台" : "Workspace"}</span><span>/</span><strong>{link ? (zh ? link.zh : link.en) : (zh ? "管理后台" : "Admin")}</strong></div>
+        <form action="/admin/orders" className="admin-global-search" role="search" onSubmit={event => { if (!search.trim()) event.preventDefault() }}><Search size={15} /><input name="keyword" aria-label={zh ? "全局搜索订单" : "Search all orders"} placeholder={zh ? "搜索订单、商品名称…" : "Search orders or products…"} value={search} maxLength={100} onChange={event => setSearch(event.target.value)} /><button type="submit" aria-label={zh ? "提交全局搜索" : "Search"}><Search size={14} /></button></form>
         <div className="admin-topbar-tools">
           <Link href="/" className="admin-view-store">{zh ? "查看商城" : "View store"}<ExternalLink size={13} /></Link>
           <button type="button" aria-label={zh ? "切换语言" : "Change language"} title={zh ? "English" : "简体中文"} onClick={() => setLocale(zh ? "en" : "zh")}><Globe size={17} /></button>

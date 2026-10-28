@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Search, ChevronDown, Eye, Download, ChevronLeft, ChevronRight, X, CheckCircle } from "lucide-react"
 import { cn, stripInvisible } from "@/lib/utils"
 import { useLocale } from "@/lib/context"
@@ -52,8 +52,15 @@ export default function AdminOrdersPage() {
 
   const [debouncedSearch, setDebouncedSearch] = useState("")
   const [markPaidConfirm, setMarkPaidConfirm] = useState<string | null>(null)
+  const latestRequest = useRef(0)
+  useEffect(() => () => { latestRequest.current++ }, [])
+  useEffect(() => {
+    const initial = new URLSearchParams(window.location.search).get("keyword") || ""
+    if (initial) { setSearch(initial.slice(0, 100)); setDebouncedSearch(initial.slice(0, 100)); setCurrentPage(1) }
+  }, [])
 
   const fetchOrders = async () => {
+    const requestId = ++latestRequest.current
     setLoading(true)
     try {
       const data = await withMockFallback(
@@ -71,13 +78,11 @@ export default function AdminOrdersPage() {
           page_size: ITEMS_PER_PAGE,
         })
       )
-      setOrders(data.list)
-      setTotal(data.pagination.total)
+      if (requestId === latestRequest.current) { setOrders(data.list); setTotal(data.pagination.total) }
     } catch {
-      setOrders([])
-      setTotal(0)
+      if (requestId === latestRequest.current) { setOrders([]); setTotal(0) }
     } finally {
-      setLoading(false)
+      if (requestId === latestRequest.current) setLoading(false)
     }
   }
 

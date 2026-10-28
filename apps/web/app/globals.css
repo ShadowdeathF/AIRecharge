@@ -36,6 +36,7 @@ body {
 @layer base {
   /* ---------- Coral (default) ---------- */
   :root {
+    color-scheme: light;
     --background: 30 20% 98%;
     --foreground: 20 20% 10%;
     --card: 0 0% 100%;
@@ -76,37 +77,39 @@ body {
     --scheme-glow: 12 85% 55%;
   }
   .dark {
-    --background: 20 15% 4%;
-    --foreground: 30 15% 95%;
-    --card: 20 12% 10%;
-    --card-foreground: 30 15% 95%;
-    --popover: 20 12% 10%;
-    --popover-foreground: 30 15% 95%;
+    /* Shared graphite surfaces for storefront, admin, auth and dialogs. */
+    color-scheme: dark;
+    --background: 210 13% 6%;
+    --foreground: 210 10% 94%;
+    --card: 215 12% 10%;
+    --card-foreground: 210 10% 94%;
+    --popover: 215 10% 13%;
+    --popover-foreground: 210 10% 94%;
     --primary: 12 85% 58%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 20 10% 14%;
-    --secondary-foreground: 30 15% 95%;
-    --muted: 20 10% 15%;
-    --muted-foreground: 30 10% 65%;
-    --accent: 20 10% 17%;
-    --accent-foreground: 30 15% 95%;
+    --primary-foreground: 210 13% 6%;
+    --secondary: 215 10% 13%;
+    --secondary-foreground: 210 10% 94%;
+    --muted: 215 9% 15%;
+    --muted-foreground: 215 9% 67%;
+    --accent: 215 10% 17%;
+    --accent-foreground: 210 10% 94%;
     --destructive: 0 62% 30%;
     --destructive-foreground: 0 0% 98%;
-    --border: 20 10% 17%;
-    --input: 20 10% 17%;
+    --border: 215 12% 19%;
+    --input: 215 12% 23%;
     --ring: 12 85% 58%;
     --chart-1: 12 85% 58%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
-    --sidebar-background: 20 12% 8%;
-    --sidebar-foreground: 30 15% 95%;
+    --sidebar-background: 215 12% 10%;
+    --sidebar-foreground: 210 10% 94%;
     --sidebar-primary: 12 85% 58%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 20 10% 14%;
-    --sidebar-accent-foreground: 30 15% 95%;
-    --sidebar-border: 20 10% 16%;
+    --sidebar-primary-foreground: 210 13% 6%;
+    --sidebar-accent: 215 10% 17%;
+    --sidebar-accent-foreground: 210 10% 94%;
+    --sidebar-border: 215 12% 19%;
     --sidebar-ring: 12 85% 58%;
     --scheme-gradient-from: 0 80% 58%;
     --scheme-gradient-via: 12 85% 58%;
@@ -223,6 +226,8 @@ body {
     --scheme-glow: 265 70% 55%;
   }
   .dark[data-color="purple"] {
+    --primary-foreground: 0 0% 100%;
+    --sidebar-primary-foreground: 0 0% 100%;
     --primary: 265 70% 60%;
     --ring: 265 70% 60%;
     --chart-1: 265 70% 60%;

@@ -1,16 +1,12 @@
-.admin-shell {
-  /* Brand colors inherit the saved site palette from html; only neutral surfaces are scoped here. */
+html:not(.dark) .admin-shell {
+  /* Light surfaces retain their layout; dark surfaces and brand colors inherit the shared site palette. */
   --background: 216 38% 98%; --foreground: 223 45% 16%; --card: 0 0% 100%; --card-foreground: 223 45% 16%;
   --popover: 0 0% 100%; --popover-foreground: 223 45% 16%; --muted: 216 33% 96%; --muted-foreground: 219 14% 46%;
   --secondary: 216 35% 96%; --secondary-foreground: 223 45% 16%; --accent: 217 68% 96%; --accent-foreground: 223 45% 16%;
   --border: 216 27% 91%; --input: 216 27% 86%;
-  font-family: var(--font-inter), "PingFang SC", "Microsoft YaHei", sans-serif; color: hsl(var(--foreground)); background: hsl(var(--background)); min-height: 100vh; overflow-wrap: anywhere;
 }
-.dark .admin-shell {
-  --background: 210 13% 6%; --foreground: 210 10% 94%; --card: 215 12% 10%; --card-foreground: 210 10% 94%;
-  --popover: 215 10% 13%; --popover-foreground: 210 10% 94%; --muted: 215 9% 15%; --muted-foreground: 215 9% 67%;
-  --secondary: 215 10% 13%; --secondary-foreground: 210 10% 94%; --accent: 215 10% 17%; --accent-foreground: 210 10% 94%;
-  --border: 215 12% 19%; --input: 215 12% 23%; color-scheme: dark;
+.admin-shell {
+  font-family: var(--font-inter), "PingFang SC", "Microsoft YaHei", sans-serif; color: hsl(var(--foreground)); background: hsl(var(--background)); min-height: 100vh; overflow-wrap: anywhere;
 }
 .admin-shell :where(button,a,input,select,textarea):focus-visible { outline: 2px solid hsl(var(--primary)); outline-offset: 3px; }
 .admin-shell :where(button,input,select,textarea) { max-width: 100%; }

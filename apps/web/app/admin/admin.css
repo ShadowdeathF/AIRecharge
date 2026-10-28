@@ -1,15 +1,16 @@
 .admin-shell {
+  /* Brand colors inherit the saved site palette from html; only neutral surfaces are scoped here. */
   --background: 216 38% 98%; --foreground: 223 45% 16%; --card: 0 0% 100%; --card-foreground: 223 45% 16%;
   --popover: 0 0% 100%; --popover-foreground: 223 45% 16%; --muted: 216 33% 96%; --muted-foreground: 219 14% 46%;
   --secondary: 216 35% 96%; --secondary-foreground: 223 45% 16%; --accent: 217 68% 96%; --accent-foreground: 223 45% 16%;
-  --border: 216 27% 91%; --input: 216 27% 86%; --primary: 222 89% 55%; --primary-foreground: 0 0% 100%; --ring: 222 89% 55%;
+  --border: 216 27% 91%; --input: 216 27% 86%;
   font-family: var(--font-inter), "PingFang SC", "Microsoft YaHei", sans-serif; color: hsl(var(--foreground)); background: hsl(var(--background)); min-height: 100vh; overflow-wrap: anywhere;
 }
 .dark .admin-shell {
   --background: 222 31% 9%; --foreground: 216 35% 94%; --card: 222 28% 12%; --card-foreground: 216 35% 94%;
   --popover: 222 27% 14%; --popover-foreground: 216 35% 94%; --muted: 221 25% 17%; --muted-foreground: 218 18% 67%;
   --secondary: 221 25% 17%; --secondary-foreground: 216 35% 94%; --accent: 220 30% 18%; --accent-foreground: 216 35% 94%;
-  --border: 220 24% 22%; --input: 220 24% 28%; --primary: 217 94% 67%; --primary-foreground: 222 47% 11%; --ring: 217 94% 67%;
+  --border: 220 24% 22%; --input: 220 24% 28%;
 }
 .admin-shell :where(button,a,input,select,textarea):focus-visible { outline: 2px solid hsl(var(--primary)); outline-offset: 3px; }
 .admin-shell :where(button,input,select,textarea) { max-width: 100%; }

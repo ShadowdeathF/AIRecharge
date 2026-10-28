@@ -42,7 +42,7 @@ export function HomeContent({ products, categories, siteSlogan, siteDescription 
   const activeFilters = Boolean(inStockOnly || priceMin || priceMax)
   // Default merchandising follows the merchant's product order within each category.
   // Search, filters and explicit sorting keep every matching result compact and in order.
-  const featured = filtered.length > 1 && sortBy === "default" && !searchQuery.trim() && !activeFilters ? filtered[0] : null
+  const featured = filtered.length > 0 && sortBy === "default" && !searchQuery.trim() && !activeFilters ? filtered[0] : null
   const compactProducts = featured ? filtered.slice(1) : filtered
   const pagination = paginateCatalog(compactProducts, page, pageSize)
   const changePage = (next: number) => {
@@ -87,7 +87,7 @@ export function HomeContent({ products, categories, siteSlogan, siteDescription 
       </div>}
       {filtered.length > 0 ? <div className={cn("store-merchandise", !featured && "store-merchandise-compact")} data-testid="catalog-grid">
         {featured && <ProductCard product={featured} featured priority />}
-        <div className={cn("store-product-list", compactProducts.length <= 3 && "store-product-list-short", featured && pagination.totalPages > 1 && "store-product-list-paged")}>
+        <div className="store-product-list">
           {pagination.items.map((product, index) => <ProductCard key={product.id} product={product} priority={!featured && index === 0} />)}
         </div>
       </div> : <div className="store-empty" data-testid="catalog-empty"><Search size={36} strokeWidth={1.3} /><h2>{t("home.noProducts")}</h2><p>{zh ? "试试其他关键词，或调整筛选条件。" : "Try another keyword or adjust your filters."}</p><button type="button" onClick={reset}>{zh ? "重置筛选" : "Reset filters"}</button></div>}

@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @Transactional
 class ProcurementIntegrationTests {
     @Autowired ProcurementService service;
+    @Autowired ProcurementReceivingService receiving;
     @Autowired PurchaseLotRepository lots;
     @Autowired EntityManager em;
     @Autowired org.springframework.test.web.servlet.MockMvc mvc;
@@ -82,5 +83,11 @@ class ProcurementIntegrationTests {
         mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/admin/procurement/lots"))
             .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
             .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.data[0].total_cost").isString());
+    }
+    @Test void receiptAndCardImportAreOneRetriableOperation(){
+        var p=purchase(product(),1);String card="TEST-ATOMIC-"+UUID.randomUUID();
+        var input=new ProcurementReceivingService.Input(new ProcurementService.ReceiveInput(p.lines().getFirst().getId(),1,new BigDecimal("112.04"),UUID.randomUUID().toString(),null,LocalDate.now()),card);
+        var first=receiving.receive(p.purchase().getId(),input,actor);var second=receiving.receive(p.purchase().getId(),input,actor);
+        assertNotNull(first.getCardImportBatchId());assertEquals(first.getId(),second.getId());assertEquals(1,service.detail(p.purchase().getId()).lots().size());
     }
 }

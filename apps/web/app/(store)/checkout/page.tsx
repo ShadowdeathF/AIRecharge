@@ -74,6 +74,7 @@ export default function CheckoutPage() {
           email,
           payment_method: selectedPayment,
           idempotency_key: generateIdempotencyKey(),
+          expected_total: totalAmount.toFixed(2),
           device,
         }),
         () => mockCreateOrder(email, selectedPayment)
@@ -97,6 +98,7 @@ export default function CheckoutPage() {
       router.push(payUrl)
     } catch (err: unknown) {
       toast.error(getApiErrorMessage(err, t))
+      await refreshCart().catch(() => {})
       handleTurnstileReset()
     } finally {
       setSubmitting(false)

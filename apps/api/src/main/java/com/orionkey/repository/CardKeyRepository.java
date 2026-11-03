@@ -29,6 +29,7 @@ public interface CardKeyRepository extends JpaRepository<CardKey, UUID> {
     long countByProductIdAndSpecIdIsNullAndStatus(UUID productId, CardKeyStatus status);
 
     List<CardKey> findByOrderId(UUID orderId);
+    List<CardKey> findByImportBatchId(UUID batchId);
 
     boolean existsByContentAndProductId(String content, UUID productId);
 

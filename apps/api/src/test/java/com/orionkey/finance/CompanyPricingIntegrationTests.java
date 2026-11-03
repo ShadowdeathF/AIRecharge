@@ -52,4 +52,10 @@ class CompanyPricingIntegrationTests {
         service.saveCompany(c.getId(),new CompanyPricingService.CompanyInput(c.getName(),false,"stopped"),actor);
         assertThrows(BusinessException.class,()->service.resolve(u.getId(),p,null,1));
     }
+    @Test void onlineQuotesAndTotalsStayWithinTheExistingPaymentMoneyRange(){
+        var p=product();var c=service.saveCompany(null,new CompanyPricingService.CompanyInput("Bounds-"+UUID.randomUUID(),true,""),actor);
+        assertThrows(BusinessException.class,()->service.saveQuote(c.getId(),p.getId(),null,BigDecimal.ZERO,actor));
+        assertThrows(BusinessException.class,()->service.saveQuote(c.getId(),p.getId(),null,new BigDecimal("100000000.00"),actor));
+        assertThrows(BusinessException.class,()->service.assertExpectedTotal(null,new BigDecimal("100000000.00")));
+    }
 }

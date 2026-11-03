@@ -1,0 +1,6 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),ts=require('typescript');
+const m={exports:{}};new Function('module','exports',ts.transpileModule(fs.readFileSync(path.join(__dirname,'../lib/customer-pricing.ts'),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText)(m,m.exports);
+const price=m.exports.customerUnitPrice;
+test('company quote wins over retail quantity tiers',()=>{assert.equal(price({base_price:120,price_source:'COMPANY',wholesale_enabled:true,wholesale_rules:[{min_quantity:2,unit_price:110}]},null,2),120)});
+test('a retail specification keeps its own tiers when another specification has a company quote',()=>{assert.equal(price({base_price:120,price_source:'COMPANY',wholesale_enabled:true,wholesale_rules:[{spec_id:'annual',min_quantity:2,unit_price:900}]},{id:'annual',price:1000,price_source:'RETAIL'},2),900)});
+test('quantity tiers match exact SKU and choose largest threshold',()=>{const p={base_price:135,wholesale_enabled:true,wholesale_rules:[{spec_id:'monthly',min_quantity:2,unit_price:125},{spec_id:'monthly',min_quantity:5,unit_price:120},{spec_id:'annual',min_quantity:1,unit_price:900}]};assert.equal(price(p,{id:'monthly',price:135},5),120);assert.equal(price(p,{id:'monthly',price:135},1),135)});

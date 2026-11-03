@@ -52,6 +52,7 @@ export interface UserProfile {
   username: string
   email: string
   role: 'USER' | 'ADMIN'
+  company_id?: string | null
   created_at: string
 }
 
@@ -69,6 +70,8 @@ export interface ProductSpec {
   id: string
   name: string
   price: number
+  price_source?: string
+  quote_id?: string
   stock_available: number
   card_key_count?: number
   is_visible?: boolean
@@ -78,6 +81,7 @@ export interface ProductSpec {
 export interface WholesaleRule {
   min_quantity: number
   unit_price: number
+  spec_id?: string | null
 }
 
 /** Product list item (returned by GET /products) */
@@ -87,6 +91,8 @@ export interface ProductCard {
   description?: string
   cover_url?: string
   base_price: number
+  price_source?: string
+  company_name?: string
   currency?: string
   category_id: string
   stock_available: number
@@ -289,6 +295,7 @@ export interface CreateOrderRequest {
   email: string
   payment_method: string
   idempotency_key: string
+  expected_total?: string
   device?: string
 }
 
@@ -296,6 +303,7 @@ export interface CreateCartOrderRequest {
   email: string
   payment_method: string
   idempotency_key: string
+  expected_total?: string
   device?: string
 }
 

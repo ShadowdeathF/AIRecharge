@@ -64,4 +64,41 @@ class FinanceTradeIntegrationTests {
         var view=trades.syncOrder(order.getId());assertEquals(new BigDecimal("210.01"),view.trade().getCostAmount());
         assertEquals(lot.getId(),view.allocations().getFirst().getLotId());
     }
+    @Test void batchConfirmationRejectsIncompleteRowsWithoutPartiallyConfirmingOthers(){
+        var p=product();var c=companies.saveCompany(null,new CompanyPricingService.CompanyInput("Batch-"+UUID.randomUUID(),true,""),actor);
+        var a=trades.createOffline(input(c.getId(),p,"BATCH-1"),actor);var b=trades.createOffline(input(c.getId(),p,"BATCH-2"),actor);
+        var purchase=purchase(p,2);procurement.receive(purchase.purchase().getId(),new ProcurementService.ReceiveInput(purchase.lines().getFirst().getId(),2,new BigDecimal("200.00"),UUID.randomUUID().toString(),null,LocalDate.now()),actor);
+        trades.allocateCosts(a.trade().getId(),new FinanceTradeService.CostInput(a.items().getFirst().key(),List.of(),a.trade().getVersion()),actor);
+        trades.recordReceipt(a.trade().getId(),new FinanceTradeService.ReceiptInput(new BigDecimal("240.00"),LocalDate.now(),true,"",UUID.randomUUID().toString(),a.trade().getVersion()),actor);
+        var requests=List.of(new FinanceTradeService.ConfirmInput(a.trade().getId(),a.trade().getVersion()),new FinanceTradeService.ConfirmInput(b.trade().getId(),b.trade().getVersion()));
+        assertThrows(BusinessException.class,()->trades.confirmBatch(requests,actor));
+        assertEquals("DRAFT",trades.detail(a.trade().getId()).trade().getStatus());
+    }
+    @Test void missingOnlineActualIncomeRemainsUnconfirmedInsteadOfAssumingAFreeOrder(){
+        Order order=new Order();order.setOrderType(OrderType.DIRECT);order.setStatus(OrderStatus.PAID);order.setPaidAt(LocalDateTime.now());order.setTotalAmount(new BigDecimal("135.00"));order.setActualAmount(null);em.persist(order);
+        var view=trades.syncOrder(order.getId());
+        assertFalse(view.trade().isReceiptFinal());assertEquals(new BigDecimal("135.00"),view.trade().getDueAmount());assertTrue(view.cash().isEmpty());
+    }
+    @Test void offlineEntryCanLinkAnExistingCompanyOrderWithoutCreatingAnotherIncome(){
+        var c=companies.saveCompany(null,new CompanyPricingService.CompanyInput("Link-"+UUID.randomUUID(),true,""),actor);
+        Order order=new Order();order.setOrderType(OrderType.DIRECT);order.setCompanyId(c.getId());order.setCompanyName(c.getName());order.setStatus(OrderStatus.PAID);order.setPaidAt(LocalDateTime.now());order.setActualAmount(new BigDecimal("135.00"));em.persist(order);
+        var input=new FinanceTradeService.OfflineInput(c.getId(),"LINK-1",LocalDate.now(),List.of(),null,"",UUID.randomUUID().toString(),order.getId());
+        var linked=trades.createOffline(input,actor);var original=trades.syncOrder(order.getId());assertEquals(original.trade().getId(),linked.trade().getId());assertEquals(1,linked.cash().size());
+        assertThrows(BusinessException.class,()->trades.createOffline(new FinanceTradeService.OfflineInput(c.getId(),"LINK-1",LocalDate.now(),List.of(),null,"",UUID.randomUUID().toString()),actor));
+    }
+    @Test void preSettlementIncomeCorrectionPreservesPaymentFactsAndInvalidatesConfirmation(){
+        var p=product();var c=companies.saveCompany(null,new CompanyPricingService.CompanyInput("Correct-"+UUID.randomUUID(),true,""),actor);
+        var view=trades.createOffline(input(c.getId(),p,"COR-1"),actor);UUID id=view.trade().getId();
+        view=trades.recordReceipt(id,new FinanceTradeService.ReceiptInput(new BigDecimal("240.00"),LocalDate.now(),true,"",UUID.randomUUID().toString(),view.trade().getVersion()),actor);
+        var request=new FinanceTradeService.ReconcileInput(new BigDecimal("-10.00"),BigDecimal.ZERO,"receipt correction",UUID.randomUUID().toString(),view.trade().getVersion());
+        view=trades.reconcile(id,request,actor);assertEquals(new BigDecimal("230.00"),view.trade().getReceivedAmount());assertFalse(view.trade().isReceiptFinal());assertEquals("DRAFT",view.trade().getStatus());
+        assertEquals(new BigDecimal("240.00"),view.cash().stream().filter(r->"RECEIPT".equals(r.getKind())).findFirst().orElseThrow().getAmount());
+        assertEquals(new BigDecimal("230.00"),trades.reconcile(id,request,actor).trade().getReceivedAmount());
+    }
+    @Test void historyBackfillCommitsBoundedBatchesAndOnlineImportRefusesIgnoredReferralFields(){
+        for(int i=0;i<51;i++){Order order=new Order();order.setOrderType(OrderType.DIRECT);order.setStatus(OrderStatus.PAID);order.setPaidAt(LocalDateTime.now());order.setActualAmount(BigDecimal.ONE);em.persist(order);}
+        var first=trades.syncPaidOrders();assertEquals(50,first.get("synced"));assertEquals(true,first.get("has_more"));
+        var second=trades.syncPaidOrders();assertEquals(1,second.get("synced"));assertEquals(false,second.get("has_more"));
+        assertThrows(BusinessException.class,()->trades.createOffline(new FinanceTradeService.OfflineInput(UUID.randomUUID(),"SOURCE",LocalDate.now(),List.of(),UUID.randomUUID(),"",UUID.randomUUID().toString(),UUID.randomUUID()),actor));
+    }
 }

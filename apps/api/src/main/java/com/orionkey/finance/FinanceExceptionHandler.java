@@ -17,6 +17,6 @@ public class FinanceExceptionHandler {
     public ResponseEntity<ApiResponse<?>> business(BusinessException e){return ResponseEntity.status(e.getHttpStatus()).body(ApiResponse.error(e.getCode(),e.getMessage(),e.getParams()));}
     @ExceptionHandler({DataIntegrityViolationException.class,ObjectOptimisticLockingFailureException.class})
     public ResponseEntity<ApiResponse<?>> conflict(Exception e){return ResponseEntity.status(409).body(ApiResponse.error(10001,"记录已变更或业务单号重复，请刷新后核对；不要重复提交"));}
-    @ExceptionHandler({IllegalArgumentException.class,HttpMessageNotReadableException.class})
+    @ExceptionHandler({IllegalArgumentException.class,HttpMessageNotReadableException.class,org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class,org.springframework.web.bind.MissingServletRequestParameterException.class})
     public ResponseEntity<ApiResponse<?>> invalid(Exception e){return ResponseEntity.badRequest().body(ApiResponse.error(10001,"输入格式无效，请核对金额、日期与必填信息"));}
 }

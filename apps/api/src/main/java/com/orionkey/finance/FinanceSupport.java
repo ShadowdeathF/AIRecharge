@@ -46,6 +46,10 @@ public class FinanceSupport {
             return financeWriter.writeValueAsString(value);
         }catch(Exception e){throw new IllegalStateException("财务快照序列化失败",e);}
     }
+    public String digest(Object value){
+        try{return java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(json(value).getBytes(java.nio.charset.StandardCharsets.UTF_8)));}
+        catch(java.security.NoSuchAlgorithmException e){throw new IllegalStateException("SHA-256 unavailable",e);}
+    }
     public void audit(String action,UUID target,Object before,Object after,String reason,UUID actor) {
         FinanceAudit row=new FinanceAudit(); row.setAction(action);row.setTargetId(target);row.setActorId(actor);
         row.setBeforeData(before==null?null:json(before));row.setAfterData(after==null?null:json(after));row.setReason(reason);

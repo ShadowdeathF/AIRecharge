@@ -10,6 +10,8 @@ import { mockCreateOrder } from "@/lib/mock-data"
 import { Turnstile, useTurnstile } from "@/components/shared/turnstile"
 import { cn, validateEmail, generateIdempotencyKey, getCurrencySymbol, detectPaymentDevice, isMobileDevice } from "@/lib/utils"
 import { PaymentSelector } from "@/components/shared/payment-selector"
+import { useCustomerProduct } from "@/hooks/use-customer-pricing"
+import { customerUnitPrice } from "@/lib/customer-pricing"
 import type { ProductDetail, ProductSpec, PaymentChannelItem } from "@/types"
 
 interface ProductActionsProps {
@@ -17,7 +19,9 @@ interface ProductActionsProps {
   channels: PaymentChannelItem[]
 }
 
-export function ProductActions({ product, channels }: ProductActionsProps) {
+export function ProductActions({ product: initialProduct, channels }: ProductActionsProps) {
+  const customerPrices = useCustomerProduct(initialProduct)
+  const product = customerPrices.value
   const { t } = useLocale()
   const { isLoggedIn } = useAuth()
   const { addItem } = useCart()
@@ -26,9 +30,10 @@ export function ProductActions({ product, channels }: ProductActionsProps) {
 
   const enabledChannels = useMemo(() => channels.filter(c => c.is_enabled), [channels])
 
-  const [selectedSpec, setSelectedSpec] = useState<ProductSpec | null>(
+  const [selectedSpecChoice, setSelectedSpec] = useState<ProductSpec | null>(
     product.specs?.[0] || null
   )
+  const selectedSpec = product.specs?.find(spec => spec.id === selectedSpecChoice?.id) || product.specs?.[0] || null
   const [quantity, setQuantity] = useState(1)
   const [email, setEmail] = useState("")
   const [emailError, setEmailError] = useState("")
@@ -38,7 +43,7 @@ export function ProductActions({ product, channels }: ProductActionsProps) {
   const [submitting, setSubmitting] = useState(false)
   const { turnstileToken, setTurnstileToken, handleTurnstileReset } = useTurnstile()
 
-  const currentPrice = selectedSpec ? selectedSpec.price : product.base_price
+  const currentPrice = customerUnitPrice(product, selectedSpec, quantity)
   const totalPrice = currentPrice * quantity
   const currentStock = selectedSpec?.stock_available ?? product.stock_available ?? 0
   const isOutOfStock = currentStock === 0
@@ -54,6 +59,7 @@ export function ProductActions({ product, channels }: ProductActionsProps) {
   }
 
   const handleBuyNow = async () => {
+    if (!customerPrices.ready || customerPrices.error) { toast.error(customerPrices.error || "正在读取账户价格，请稍候"); return }
     if (!email.trim()) {
       toast.error(t("product.emailRequired"))
       emailInputRef.current?.focus()
@@ -87,6 +93,7 @@ export function ProductActions({ product, channels }: ProductActionsProps) {
           email,
           payment_method: selectedPayment,
           idempotency_key: generateIdempotencyKey(),
+          expected_total: totalPrice.toFixed(2),
           device,
         }),
         () => mockCreateOrder(email, selectedPayment)
@@ -109,6 +116,7 @@ export function ProductActions({ product, channels }: ProductActionsProps) {
       router.push(payUrl)
     } catch (err: unknown) {
       toast.error(getApiErrorMessage(err, t))
+      customerPrices.refresh()
       handleTurnstileReset()
     } finally {
       setSubmitting(false)
@@ -116,6 +124,7 @@ export function ProductActions({ product, channels }: ProductActionsProps) {
   }
 
   const handleAddToCart = async () => {
+    if (!customerPrices.ready || customerPrices.error) { toast.error(customerPrices.error || "正在读取账户价格，请稍候"); return }
     if (product.specs.length > 0 && !selectedSpec) return
     if (isOutOfStock) {
       toast.error(t("product.outOfStock"))
@@ -144,6 +153,9 @@ export function ProductActions({ product, channels }: ProductActionsProps) {
 
       {/* Price + Specs + Stock */}
       <div className="rounded-lg border border-border p-4 space-y-4">
+        {!customerPrices.ready && <p className="text-sm text-muted-foreground" role="status">正在读取账户价格…</p>}
+        {customerPrices.error && <div className="text-sm text-destructive" role="alert">{customerPrices.error} <button type="button" className="underline" onClick={customerPrices.refresh}>重新读取</button></div>}
+        {customerPrices.ready && !customerPrices.error && (selectedSpec?.price_source || product.price_source) === "COMPANY" && <p className="text-xs font-medium text-primary">{product.company_name} · 企业协议价</p>}
         {/* Price row + delivery status */}
         <div className="flex flex-wrap items-baseline justify-between gap-y-2">
           <div className="flex items-baseline gap-3">
@@ -321,7 +333,7 @@ export function ProductActions({ product, channels }: ProductActionsProps) {
         <div className="flex gap-3">
           <button
             onClick={handleBuyNow}
-            disabled={submitting || isOutOfStock}
+            disabled={submitting || isOutOfStock || !customerPrices.ready || Boolean(customerPrices.error)}
             className="scheme-glow inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-primary text-sm font-semibold text-primary-foreground transition-all hover:brightness-110 disabled:pointer-events-none disabled:opacity-50"
           >
             {submitting ? (
@@ -333,7 +345,7 @@ export function ProductActions({ product, channels }: ProductActionsProps) {
           </button>
           <button
             onClick={handleAddToCart}
-            disabled={isOutOfStock}
+            disabled={isOutOfStock || !customerPrices.ready || Boolean(customerPrices.error)}
             className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-border bg-transparent px-5 text-sm font-medium text-foreground transition-colors hover:bg-accent disabled:pointer-events-none disabled:opacity-50"
           >
             <ShoppingCart className="h-4 w-4" />

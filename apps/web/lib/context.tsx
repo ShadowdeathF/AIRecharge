@@ -276,6 +276,8 @@ export function AppProviders({ children, initialConfig }: { children: ReactNode;
   }, [])
 
   const setUser = useCallback((u: UserProfile | null) => {
+    setCartItems([])
+    setCartTotal(0)
     setUserState(u)
     if (u) {
       localStorage.setItem("userProfile", JSON.stringify(u))
@@ -298,14 +300,18 @@ export function AppProviders({ children, initialConfig }: { children: ReactNode;
   const [cartLoading, setCartLoading] = useState(false)
 
   const refreshCart = useCallback(async () => {
+    const owner = `${localStorage.getItem("auth_token") || "guest"}:${localStorage.getItem("session_token") || ""}`
     setCartLoading(true)
     try {
       const cart = await withMockFallback(
         () => cartApi.get(),
         () => mockCartData()
       )
-      setCartItems(cart.items)
-      setCartTotal(cart.total_amount)
+      const currentOwner = `${localStorage.getItem("auth_token") || "guest"}:${localStorage.getItem("session_token") || ""}`
+      if (owner === currentOwner) {
+        setCartItems(cart.items)
+        setCartTotal(cart.total_amount)
+      }
     } catch {
       // silently fail — cart is not critical
     } finally {
@@ -331,6 +337,7 @@ export function AppProviders({ children, initialConfig }: { children: ReactNode;
   }, [refreshCart])
 
   const updateItem = useCallback(async (itemId: string, quantity: number) => {
+    const owner = localStorage.getItem("auth_token")
     // Optimistic update: 立即更新本地状态，避免等待 API 往返导致页面刷新
     const prevItems = [...cartItems]
     const prevTotal = cartTotal
@@ -347,13 +354,16 @@ export function AppProviders({ children, initialConfig }: { children: ReactNode;
         () => cartApi.updateItem(itemId, quantity),
         () => null
       )
+      await refreshCart()
     } catch (err) {
       // API 失败（如库存不足）→ 回滚到之前的状态
-      setCartItems(prevItems)
-      setCartTotal(prevTotal)
+      if (owner === localStorage.getItem("auth_token")) {
+        setCartItems(prevItems)
+        setCartTotal(prevTotal)
+      }
       throw err
     }
-  }, [cartItems, cartTotal])
+  }, [cartItems, cartTotal, refreshCart])
 
   const removeItem = useCallback(async (itemId: string) => {
     await withMockFallback(

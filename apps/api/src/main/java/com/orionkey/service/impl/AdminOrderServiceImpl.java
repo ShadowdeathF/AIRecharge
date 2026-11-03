@@ -28,6 +28,7 @@ public class AdminOrderServiceImpl implements AdminOrderService {
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final UserRepository userRepository;
+    private final org.springframework.context.ApplicationEventPublisher financeEvents;
 
     @Override
     public PageResult<?> listOrders(String status, String orderType, String paymentMethod,
@@ -70,6 +71,7 @@ public class AdminOrderServiceImpl implements AdminOrderService {
         order.setStatus(OrderStatus.PAID);
         order.setPaidAt(LocalDateTime.now());
         orderRepository.save(order);
+        financeEvents.publishEvent(new com.orionkey.finance.FinanceOrderEvent(order.getId()));
     }
 
     private Map<String, Object> toAdminOrder(Order o) {

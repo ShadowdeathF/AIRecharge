@@ -9,6 +9,8 @@ public class AdminFinanceSettlementController {
     private final FinanceSettlementService service;
     @GetMapping("/overview") public ApiResponse<?> overview(){return ApiResponse.success(service.overview());}
     @GetMapping("/people") public ApiResponse<?> people(){return ApiResponse.success(service.people());}
+    @GetMapping("/people/{id}/cash") public ApiResponse<?> personalCash(@PathVariable UUID id){return ApiResponse.success(service.personalCash(id));}
+    @GetMapping("/reserve-report") public ApiResponse<?> reserveReport(@RequestParam("start_date") @org.springframework.format.annotation.DateTimeFormat(iso=org.springframework.format.annotation.DateTimeFormat.ISO.DATE)java.time.LocalDate start,@RequestParam("end_date") @org.springframework.format.annotation.DateTimeFormat(iso=org.springframework.format.annotation.DateTimeFormat.ISO.DATE)java.time.LocalDate end){return ApiResponse.success(service.reserveReport(start,end));}
     @PostMapping("/people") public ApiResponse<?> createPerson(@RequestBody FinanceSettlementService.PersonInput input){return ApiResponse.success(service.savePerson(null,input,RequestContext.getUserId()));}
     @PutMapping("/people/{id}") public ApiResponse<?> savePerson(@PathVariable UUID id,@RequestBody FinanceSettlementService.PersonInput input){return ApiResponse.success(service.savePerson(id,input,RequestContext.getUserId()));}
     @GetMapping("/candidates") public ApiResponse<?> candidates(){return ApiResponse.success(service.candidates());}
@@ -16,6 +18,10 @@ public class AdminFinanceSettlementController {
     @PostMapping("/settlements") public ApiResponse<?> settle(@RequestBody FinanceSettlementService.ProfitInput input){return ApiResponse.success(service.confirmProfit(input,RequestContext.getUserId()));}
     @GetMapping("/settlements") public ApiResponse<?> documents(@RequestParam(defaultValue="1")int page,@RequestParam(name="page_size",defaultValue="20")int size){return ApiResponse.success(service.documents(page,size));}
     @GetMapping("/settlements/{id}") public ApiResponse<?> detail(@PathVariable UUID id){return ApiResponse.success(service.detail(id));}
+    @GetMapping("/settlements/{id}/export") public org.springframework.http.ResponseEntity<byte[]> export(@PathVariable UUID id){
+        return org.springframework.http.ResponseEntity.ok().contentType(org.springframework.http.MediaType.parseMediaType("text/csv;charset=UTF-8"))
+            .header("Content-Disposition","attachment; filename=settlement.csv").header("Cache-Control","no-store").body(service.exportDocument(id));
+    }
     @GetMapping("/quarters/{quarter}/preview") public ApiResponse<?> quarter(@PathVariable String quarter){return ApiResponse.success(service.previewQuarter(quarter));}
     @PostMapping("/quarters") public ApiResponse<?> quarterConfirm(@RequestBody FinanceSettlementService.QuarterInput input){return ApiResponse.success(service.confirmQuarter(input,RequestContext.getUserId()));}
     @PostMapping("/adjustments") public ApiResponse<?> adjust(@RequestBody FinanceSettlementService.AdjustInput input){return ApiResponse.success(service.adjust(input,RequestContext.getUserId()));}

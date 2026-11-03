@@ -43,7 +43,7 @@ public class CompanyPricingService {
     @Transactional public CompanyQuote saveQuote(UUID companyId,UUID productId,UUID specId,BigDecimal price,UUID actor){
         companies.lockById(companyId).filter(Company::isEnabled).orElseThrow(()->bad("企业不存在或已停用"));
         Product product=products.findById(productId).filter(p->p.getIsDeleted()==0).orElseThrow(()->bad("商品不存在"));validateSpec(product,specId);
-        price=amount(price,false);String key=sku(productId,specId);
+        price=amount(price,false);validateOnlineAmount(price);String key=sku(productId,specId);
         var old=quotes.findFirstByCompanyIdAndSkuKeyAndActiveTrue(companyId,key);long revision=old.map(q->q.getRevision()+1).orElse(1L);
         old.ifPresent(q->{q.setActive(false);quotes.saveAndFlush(q);});
         CompanyQuote quote=new CompanyQuote();quote.setCompanyId(companyId);quote.setProductId(productId);quote.setSpecId(specId);quote.setSkuKey(key);quote.setUnitPrice(price);quote.setRevision(revision);quote.setCreatedBy(actor);quotes.save(quote);
@@ -70,9 +70,13 @@ public class CompanyPricingService {
         return companies.findById(user.getCompanyId()).filter(Company::isEnabled).orElseThrow(()->bad("企业账户已暂停，请联系商家"));
     }
     public void assertExpectedTotal(Object expected,BigDecimal actual){
+        validateOnlineAmount(actual);
         if(expected==null)return;
         try{if(amount(new BigDecimal(expected.toString()),false).compareTo(actual)!=0)throw bad("报价已变化，请刷新价格后重新确认下单");}
         catch(NumberFormatException e){throw bad("确认金额格式无效");}
+    }
+    private void validateOnlineAmount(BigDecimal value){
+        if(value==null || value.signum()<=0 || value.compareTo(new BigDecimal("99999999.99"))>0)throw bad("线上金额须大于零且不超过99,999,999.99元");
     }
     private void validateSpec(Product product,UUID specId){
         if(product.isSpecEnabled() && specId==null)throw bad("请选择商品规格");

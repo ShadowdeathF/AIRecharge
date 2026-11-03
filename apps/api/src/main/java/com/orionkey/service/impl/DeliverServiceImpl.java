@@ -28,6 +28,7 @@ public class DeliverServiceImpl implements DeliverService {
     private final OrderItemRepository orderItemRepository;
     private final CardKeyRepository cardKeyRepository;
     private final EmailService emailService;
+    private final org.springframework.context.ApplicationEventPublisher financeEvents;
 
     @Override
     @SuppressWarnings("unchecked")
@@ -122,26 +123,41 @@ public class DeliverServiceImpl implements DeliverService {
                     }
                 }
                 try {
-                    List<CardKey> allAllocated = new ArrayList<>();
-                    for (OrderItem item : items) {
+                    Map<OrderItem, List<CardKey>> planned = new LinkedHashMap<>();
+                    Set<UUID> selectedKeys = new HashSet<>();
+                    Map<String, Integer> selectedPerSku = new HashMap<>();
+                    List<OrderItem> allocationItems = items.stream().sorted(Comparator.comparing(
+                            (OrderItem item) -> item.getProductId().toString() + ":" + String.valueOf(item.getSpecId()))
+                            .thenComparing(item -> item.getId().toString())).toList();
+                    for (OrderItem item : allocationItems) {
+                        String sku = item.getProductId() + ":" + String.valueOf(item.getSpecId());
+                        int already = selectedPerSku.getOrDefault(sku, 0);
                         List<CardKey> keys = cardKeyRepository.findAndLockAvailable(
-                                item.getProductId(), item.getSpecId(), item.getQuantity());
+                                item.getProductId(), item.getSpecId(), item.getQuantity() + already)
+                                .stream().filter(key -> !selectedKeys.contains(key.getId())).limit(item.getQuantity()).toList();
                         if (keys.size() < item.getQuantity()) {
                             throw new BusinessException(ErrorCode.ORDER_OUT_OF_STOCK, "缺货补货中，请联系客服");
                         }
-                        for (CardKey key : keys) {
+                        keys.forEach(key -> selectedKeys.add(key.getId()));
+                        selectedPerSku.put(sku, already + keys.size());
+                        planned.put(item, keys);
+                    }
+                    // Validate and lock the entire order before changing stock or triggering cost attribution.
+                    for (var allocation : planned.entrySet()) {
+                        OrderItem item = allocation.getKey();
+                        for (CardKey key : allocation.getValue()) {
                             key.setStatus(CardKeyStatus.SOLD);
                             key.setOrderId(orderId);
                             key.setOrderItemId(item.getId());
                             key.setSoldAt(LocalDateTime.now());
                             cardKeyRepository.save(key);
                         }
-                        allAllocated.addAll(keys);
                     }
 
                     order.setStatus(OrderStatus.DELIVERED);
                     order.setDeliveredAt(LocalDateTime.now());
                     orderRepository.save(order);
+                    financeEvents.publishEvent(new com.orionkey.finance.FinanceOrderEvent(orderId));
 
 
                     // Send delivery email after transaction commits (async, non-blocking)

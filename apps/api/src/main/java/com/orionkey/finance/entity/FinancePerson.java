@@ -11,6 +11,7 @@ public class FinancePerson extends BaseEntity {
  @Column(nullable=false,length=80) private String name;
  @Column(length=20) private String baseRole;
  private boolean enabled=true;
+ private boolean confirmed=false;
  @Column(precision=18,scale=6,nullable=false) private BigDecimal dividendWeight=BigDecimal.ZERO;
  @Version private long version;
 }

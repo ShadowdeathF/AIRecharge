@@ -85,7 +85,7 @@ public class ProcurementService {
             PurchaseLot lot=previous.get();
             if(!lot.getPurchaseId().equals(purchaseId) || !lot.getPurchaseLineId().equals(request.lineId()) || lot.getQuantity()!=qty
                 || lot.getTotalCost().compareTo(cost)!=0 || !lot.getReceivedOn().equals(receivedOn)
-                || !Objects.equals(lot.getCardImportBatchId(),request.cardImportBatchId())) throw bad("入库幂等标识与原请求不同");
+                || (request.cardImportBatchId()!=null && !Objects.equals(lot.getCardImportBatchId(),request.cardImportBatchId()))) throw bad("入库幂等标识与原请求不同");
             return lot;
         }
         PurchaseLine line=lines.findById(request.lineId()).filter(l->l.getPurchaseId().equals(purchaseId)).orElseThrow(()->bad("采购明细不属于此采购单"));
@@ -104,7 +104,7 @@ public class ProcurementService {
     @Transactional
     public void linkCardBatch(UUID lotId,UUID batchId,UUID actor) {
         PurchaseLot lot=lots.lockById(lotId).orElseThrow(()->bad("采购入库批次不存在"));
-        CardImportBatch batch=cardBatches.findById(batchId).orElseThrow(()->bad("卡密入库批次不存在"));
+        CardImportBatch batch=cardBatches.lockById(batchId).orElseThrow(()->bad("卡密入库批次不存在"));
         if(!lot.getProductId().equals(batch.getProductId()) || !Objects.equals(lot.getSpecId(),batch.getSpecId()) || lot.getQuantity()!=batch.getSuccessCount())
             throw bad("卡密批次的商品、规格和成功数量须与采购入库一致");
         if((lot.getCardImportBatchId()!=null && !lot.getCardImportBatchId().equals(batchId)) || (batch.getProcurementLotId()!=null && !batch.getProcurementLotId().equals(lotId)))

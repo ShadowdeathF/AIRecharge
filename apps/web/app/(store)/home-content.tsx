@@ -6,6 +6,7 @@ import { ProductCard } from "@/components/store/product-card"
 import { CatalogPagination } from "@/components/store/catalog-pagination"
 import { paginateCatalog } from "@/lib/catalog-pagination"
 import { cn } from "@/lib/utils"
+import { useCustomerCatalog } from "@/hooks/use-customer-pricing"
 import type { ProductCard as Product, Category } from "@/types"
 
 interface HomeContentProps { products: Product[]; categories: Category[]; siteSlogan: string; siteDescription: string }
@@ -14,7 +15,9 @@ const subscribeMobile = (callback: () => void) => { const query = window.matchMe
 const getMobile = () => window.matchMedia(mobileQuery).matches
 const getServerMobile = () => false
 
-export function HomeContent({ products, categories, siteSlogan, siteDescription }: HomeContentProps) {
+export function HomeContent({ products: initialProducts, categories, siteSlogan, siteDescription }: HomeContentProps) {
+  const customerPrices = useCustomerCatalog(initialProducts)
+  const products = customerPrices.value
   const { locale, t } = useLocale()
   const zh = locale === "zh"
   const { config } = useSiteConfig()
@@ -68,6 +71,7 @@ export function HomeContent({ products, categories, siteSlogan, siteDescription 
       {config?.hero_link_url ? <a href={config.hero_link_url} className="block h-full" aria-label={zh ? "查看横幅推荐" : "Explore featured content"}>{heroContent}</a> : heroContent}
     </section>}
     <section ref={catalog} id="catalog" className="store-catalog" aria-label={zh ? "商品目录" : "Product catalog"}>
+      {customerPrices.error && <p role="alert" className="text-sm text-destructive mb-3">{customerPrices.error}</p>}
       <div className="store-catalog-toolbar">
         <div className="store-categories" role="group" aria-label={zh ? "商品分类" : "Categories"}>
           <button type="button" onClick={() => setCategory(null)} aria-pressed={!category} className={cn(!category && "active")}>{t("home.allCategories")}</button>

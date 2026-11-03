@@ -11,4 +11,5 @@ List<FinanceCashMovement> findByPersonIdOrderByCreatedAtAsc(UUID personId);
 List<FinanceCashMovement> findByKindOrderByHappenedOnDesc(String kind);
  Optional<FinanceCashMovement> findByKindAndPersonIdAndReference(String kind,UUID personId,String reference);
  boolean existsByReversesId(UUID id);
+ java.util.Optional<FinanceCashMovement> findByKindAndReference(String kind,String reference);
 }

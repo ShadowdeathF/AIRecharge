@@ -8,6 +8,7 @@ import java.time.*;
 import java.util.UUID;
 @Getter @Setter @Entity @Table(name="finance_trades")
 public class FinanceTrade extends BaseEntity {
+ @Column(precision=18,scale=2,nullable=false) private BigDecimal reconciliationCost=BigDecimal.ZERO;
  @Column(unique=true) private UUID sourceOrderId;
  @Column(nullable=false,unique=true,length=255) private String sourceKey;
  @Column(nullable=false,unique=true,length=128) private String idempotencyKey;

@@ -36,6 +36,7 @@ public class WebhookServiceImpl implements WebhookService {
     private final EpayService epayService;
     private final ObjectMapper objectMapper;
     private final PaymentServiceImpl paymentService;
+    private final org.springframework.context.ApplicationEventPublisher financeEvents;
 
     @Override
     @Transactional
@@ -162,6 +163,7 @@ public class WebhookServiceImpl implements WebhookService {
             order.setStatus(OrderStatus.PAID);
             order.setPaidAt(LocalDateTime.now());
             orderRepository.save(order);
+            financeEvents.publishEvent(new com.orionkey.finance.FinanceOrderEvent(order.getId()));
             event.setProcessResult("SUCCESS");
             log.info("Epay callback: order {} marked as PAID", orderId);
         } else {

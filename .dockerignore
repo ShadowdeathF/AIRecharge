@@ -21,6 +21,7 @@ docs/
 .claude/
 .idea/
 .local/
+.worktrees/
 .env
 .env.*
 !.env.example

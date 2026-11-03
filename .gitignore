@@ -50,3 +50,6 @@ uploads/
 .DS_Store
 # Original upstream demo screenshots and sponsor artwork are kept locally only.
 /.github/assets/
+
+# Isolated feature workspaces
+.worktrees/

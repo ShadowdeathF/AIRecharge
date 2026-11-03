@@ -95,7 +95,7 @@
 
 - [x] Run full Maven `package` and existing/new frontend tests; verify explicit PostgreSQL migration in an isolated local database and preserve existing demo data.
 - [x] Have a fresh reviewer inspect the complete branch for spec coverage, access control, stock/money conservation and user-visible failures; fix material findings with regression tests.
-- [ ] Integrate the verified branch into the user's checkout, update local runtime and record deployment boundaries. Do not publish private dumps/configuration or claim real payment/supplier fulfillment.
+- [x] Integrate the verified branch into the user's checkout, update local runtime and record deployment boundaries. Do not publish private dumps/configuration or claim real payment/supplier fulfillment.
 
 ## Execution rulings
 

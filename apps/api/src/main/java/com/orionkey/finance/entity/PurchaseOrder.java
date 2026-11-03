@@ -22,4 +22,3 @@ public class PurchaseOrder extends BaseEntity {
     private UUID createdBy;
     @Version private long version;
 }
-

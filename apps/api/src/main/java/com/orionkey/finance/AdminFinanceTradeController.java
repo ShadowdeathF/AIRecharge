@@ -20,6 +20,7 @@ public class AdminFinanceTradeController {
     @PostMapping("/{id}/receipts") public ApiResponse<?> receipt(@PathVariable UUID id,@RequestBody FinanceTradeService.ReceiptInput input){return ApiResponse.success(service.recordReceipt(id,input,RequestContext.getUserId()));}
     @PostMapping("/{id}/costs") public ApiResponse<?> costs(@PathVariable UUID id,@RequestBody FinanceTradeService.CostInput input){return ApiResponse.success(service.allocateCosts(id,input,RequestContext.getUserId()));}
     @PostMapping("/{id}/confirm") public ApiResponse<?> confirm(@PathVariable UUID id,@RequestBody VersionInput input){return ApiResponse.success(service.confirm(id,input.version(),RequestContext.getUserId()));}
+    @PostMapping("/{id}/final-income") public ApiResponse<?> finalIncome(@PathVariable UUID id,@RequestBody FinanceTradeService.FinalIncomeInput input){return ApiResponse.success(service.finalizeIncome(id,input,RequestContext.getUserId()));}
     @PutMapping("/{id}/referrer") public ApiResponse<?> referrer(@PathVariable UUID id,@RequestBody FinanceTradeService.ReferrerInput input){return ApiResponse.success(service.referrer(id,input,RequestContext.getUserId()));}
     @PostMapping("/import/preview") public ApiResponse<?> preview(@RequestBody List<FinanceTradeService.OfflineInput> input){return ApiResponse.success(service.previewImport(input));}
     @PostMapping("/import/commit") public ApiResponse<?> commit(@RequestBody List<FinanceTradeService.OfflineInput> input){return ApiResponse.success(service.commitImport(input,RequestContext.getUserId()));}

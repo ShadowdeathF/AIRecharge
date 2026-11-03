@@ -10,4 +10,3 @@ public interface StockAllocationRepository extends JpaRepository<StockAllocation
     List<StockAllocation> findByTradeIdAndLineKeyOrderByCreatedAtAsc(UUID tradeId,String lineKey);
     List<StockAllocation> findByTradeId(UUID tradeId);
 }
-

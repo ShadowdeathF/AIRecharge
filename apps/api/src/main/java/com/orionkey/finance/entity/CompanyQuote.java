@@ -16,4 +16,3 @@ public class CompanyQuote extends BaseEntity {
  private boolean active=true;
  private UUID createdBy;
 }
-

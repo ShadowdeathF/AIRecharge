@@ -12,4 +12,3 @@ public class Company extends BaseEntity {
  @Column(length=500) private String note;
  @Version private long version;
 }
-

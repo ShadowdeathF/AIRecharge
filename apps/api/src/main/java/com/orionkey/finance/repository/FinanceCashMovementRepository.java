@@ -9,4 +9,6 @@ public interface FinanceCashMovementRepository extends JpaRepository<FinanceCash
 List<FinanceCashMovement> findByTradeIdOrderByCreatedAtAsc(UUID tradeId);
 List<FinanceCashMovement> findByPersonIdOrderByCreatedAtAsc(UUID personId);
 List<FinanceCashMovement> findByKindOrderByHappenedOnDesc(String kind);
+ Optional<FinanceCashMovement> findByKindAndPersonIdAndReference(String kind,UUID personId,String reference);
+ boolean existsByReversesId(UUID id);
 }

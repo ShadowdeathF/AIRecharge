@@ -9,4 +9,3 @@ import java.util.*;
 public interface FinanceAuditRepository extends JpaRepository<FinanceAudit,UUID> {
     List<FinanceAudit> findByTargetIdOrderByCreatedAtDesc(UUID targetId);
 }
-

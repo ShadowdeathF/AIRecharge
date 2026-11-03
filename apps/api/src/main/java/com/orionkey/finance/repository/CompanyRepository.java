@@ -7,4 +7,3 @@ import java.util.*;
 public interface CompanyRepository extends JpaRepository<Company,UUID> {
  @Lock(LockModeType.PESSIMISTIC_WRITE) @Query("select c from Company c where c.id=:id") Optional<Company> lockById(@Param("id")UUID id);
 }
-

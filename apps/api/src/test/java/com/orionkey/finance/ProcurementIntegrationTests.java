@@ -15,11 +15,13 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
+@org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 @Transactional
 class ProcurementIntegrationTests {
     @Autowired ProcurementService service;
     @Autowired PurchaseLotRepository lots;
     @Autowired EntityManager em;
+    @Autowired org.springframework.test.web.servlet.MockMvc mvc;
     @Autowired com.orionkey.service.AdminCardKeyService cardService;
     private final UUID actor = UUID.randomUUID();
     private Product product() {
@@ -73,5 +75,12 @@ class ProcurementIntegrationTests {
         var imported=cardService.importCardKeys(Map.of("product_id",product.getId().toString(),"content","TEST-PROCUREMENT-"+UUID.randomUUID(),"procurement_lot_id",lot.getId().toString()),actor);
         assertNotNull(lots.findById(lot.getId()).orElseThrow().getCardImportBatchId());
         assertThrows(BusinessException.class,()->service.allocateFifo(UUID.randomUUID(),"offline",product.getId(),null,1,List.of(lot.getId()),actor));
+    }
+    @Test @org.springframework.security.test.context.support.WithMockUser(roles="ADMIN")
+    void financeMoneyUsesDecimalStringsAcrossApiBoundary() throws Exception {
+        receive(purchase(product(),1),1,"112.04",UUID.randomUUID().toString());
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/admin/procurement/lots"))
+            .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
+            .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.data[0].total_cost").isString());
     }
 }

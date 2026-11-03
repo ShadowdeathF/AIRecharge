@@ -27,4 +27,3 @@ public class PurchaseLot extends BaseEntity {
     private UUID createdBy;
     @Version private long version;
 }
-

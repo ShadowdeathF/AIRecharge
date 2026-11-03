@@ -16,4 +16,3 @@ public interface PurchaseLotRepository extends JpaRepository<PurchaseLot,UUID> {
     @Query("select l from PurchaseLot l where l.id=:id")
     Optional<PurchaseLot> lockById(@Param("id") UUID id);
 }
-

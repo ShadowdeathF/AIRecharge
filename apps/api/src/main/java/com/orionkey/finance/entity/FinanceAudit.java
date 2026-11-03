@@ -20,4 +20,3 @@ public class FinanceAudit extends BaseEntity {
     @Column(columnDefinition="TEXT") private String afterData;
     @Column(length=500) private String reason;
 }
-

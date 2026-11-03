@@ -20,4 +20,3 @@ public class StockAllocation extends BaseEntity {
     @Column(precision=18,scale=2,nullable=false) private BigDecimal cost;
     private UUID createdBy;
 }
-

@@ -8,4 +8,3 @@ public interface CompanyQuoteRepository extends JpaRepository<CompanyQuote,UUID>
  List<CompanyQuote> findByCompanyIdOrderByCreatedAtDesc(UUID companyId);
 Optional<CompanyQuote> findFirstByCompanyIdAndSkuKeyAndActiveTrue(UUID companyId,String skuKey);
 }
-

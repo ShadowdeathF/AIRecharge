@@ -9,4 +9,3 @@ import java.util.*;
 public interface PurchaseLineRepository extends JpaRepository<PurchaseLine,UUID> {
     List<PurchaseLine> findByPurchaseIdOrderByCreatedAtAsc(UUID purchaseId);
 }
-

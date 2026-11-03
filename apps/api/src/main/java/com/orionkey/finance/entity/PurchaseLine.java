@@ -22,4 +22,3 @@ public class PurchaseLine extends BaseEntity {
     private int receivedQuantity;
     @Version private long version;
 }
-

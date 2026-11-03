@@ -12,4 +12,3 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder,UUI
     @Query("select p from PurchaseOrder p where p.id = :id")
     Optional<PurchaseOrder> lockById(@Param("id") UUID id);
 }
-

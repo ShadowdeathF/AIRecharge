@@ -19,6 +19,7 @@ public class FinanceSupport {
     private final ObjectMapper mapper;
     private final FinanceAuditRepository audits;
     private final com.orionkey.finance.repository.FinanceControlRepository controls;
+    private volatile com.fasterxml.jackson.databind.ObjectWriter financeWriter;
     public void guard() { controls.lockMain().orElseThrow(()->bad("财务初始化未完成")); }
     public static void version(long actual,Long expected) { if(expected==null || expected!=actual) throw bad("记录已变更，请刷新后再操作"); }
     public static BusinessException bad(String message) { return new BusinessException(ErrorCode.BAD_REQUEST,message); }
@@ -34,7 +35,16 @@ public class FinanceSupport {
     public static int quantity(int value) { if(value<1 || value>999999) throw bad("数量须为1到999999的整数"); return value; }
     public static LocalDate date(LocalDate value) { if(value==null || value.getYear()<2000 || value.isAfter(LocalDate.now(ZONE))) throw bad("业务日期无效或晚于今天"); return value; }
     public String json(Object value) {
-        try{return mapper.writeValueAsString(value);}catch(Exception e){throw new IllegalStateException("财务快照序列化失败",e);}
+        try{
+            if(financeWriter==null)synchronized(this){
+                if(financeWriter==null){
+                    var decimalModule=new com.fasterxml.jackson.databind.module.SimpleModule();
+                    decimalModule.addSerializer(BigDecimal.class,com.fasterxml.jackson.databind.ser.std.ToStringSerializer.instance);
+                    financeWriter=mapper.copy().registerModule(decimalModule).writer();
+                }
+            }
+            return financeWriter.writeValueAsString(value);
+        }catch(Exception e){throw new IllegalStateException("财务快照序列化失败",e);}
     }
     public void audit(String action,UUID target,Object before,Object after,String reason,UUID actor) {
         FinanceAudit row=new FinanceAudit(); row.setAction(action);row.setTargetId(target);row.setActorId(actor);

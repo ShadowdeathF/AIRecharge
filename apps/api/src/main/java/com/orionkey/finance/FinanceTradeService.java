@@ -23,6 +23,7 @@ public class FinanceTradeService {
     private final FinanceTradeRepository trades;
     private final FinanceCashMovementRepository cash;
     private final FinancePersonRepository people;
+    private final FinanceAdjustmentRepository adjustments;
     private final FinanceAuditRepository audits;
     private final CompanyRepository companies;
     private final ProductRepository products;
@@ -41,18 +42,27 @@ public class FinanceTradeService {
     public record ItemInput(UUID productId,UUID specId,int quantity,BigDecimal unitPrice,String priceReason) {}
     public record OfflineInput(UUID companyId,String externalReference,LocalDate businessDate,List<ItemInput> items,UUID referrerId,String note,String idempotencyKey) {}
     public record TradeLine(String key,UUID productId,UUID specId,String productTitle,String specName,int quantity,BigDecimal unitPrice,BigDecimal cost,UUID quoteId) {}
-    public record TradeView(FinanceTrade trade,List<TradeLine> items,List<StockAllocation> allocations,List<FinanceCashMovement> cash,List<FinanceAudit> history) {}
+    public record TradeView(FinanceTrade trade,List<TradeLine> items,List<StockAllocation> allocations,List<FinanceCashMovement> cash,List<FinanceAudit> history,List<FinanceAdjustment> adjustments,BigDecimal effectiveReceived,BigDecimal effectiveCost) {}
     public record ReceiptInput(BigDecimal amount,LocalDate happenedOn,boolean finalReceipt,String reason,String idempotencyKey,Long version) {}
     public record CostInput(String lineKey,List<UUID> lotIds,Long version) {}
     public record ReferrerInput(UUID referrerId,String reason,Long version) {}
+    public record FinalIncomeInput(String reason,Long version) {}
 
     public List<TradeLine> items(FinanceTrade trade){
         try{return mapper.readValue(trade.getItemsJson(),new TypeReference<List<TradeLine>>(){});}catch(Exception e){throw new IllegalStateException("交易快照损坏，不能继续核算",e);}
     }
     public TradeView detail(UUID id){return view(trades.findById(id).orElseThrow(()->bad("财务交易不存在")));}
-    private TradeView view(FinanceTrade trade){return new TradeView(trade,items(trade),allocations.findByTradeId(trade.getId()),cash.findByTradeIdOrderByCreatedAtAsc(trade.getId()),audits.findByTargetIdOrderByCreatedAtDesc(trade.getId()));}
+    private TradeView view(FinanceTrade trade){
+        var changes=adjustments.findByTradeIdOrderBySequenceNumberAsc(trade.getId());
+        return new TradeView(trade,items(trade),allocations.findByTradeId(trade.getId()),cash.findByTradeIdOrderByCreatedAtAsc(trade.getId()),audits.findByTargetIdOrderByCreatedAtDesc(trade.getId()),changes,effective(trade,changes,false),effective(trade,changes,true));
+    }
+    private BigDecimal effective(FinanceTrade trade,List<FinanceAdjustment> changes,boolean cost){
+        BigDecimal value=cost?trade.getCostAmount():trade.getReceivedAmount();if(value==null)return null;
+        for(var row:changes)value=value.add(cost?row.getCostDelta():row.getIncomeDelta());return value;
+    }
 
     @Transactional public TradeView createOffline(OfflineInput input,UUID actor){
+        if(input==null)throw bad("交易内容不能为空");
         support.guard();String fingerprint=fingerprint(input);
         String external=text(input.externalReference(),120,"企业外部单号");String key=text(input.idempotencyKey(),128,"幂等标识");
         String sourceKey="OFFLINE:"+input.companyId()+":"+external.toLowerCase(Locale.ROOT);
@@ -69,6 +79,7 @@ public class FinanceTradeService {
     }
     private record Prepared(Company company,List<TradeLine> items,BigDecimal due) {}
     private Prepared prepare(OfflineInput input){
+        if(input==null)throw bad("交易内容不能为空");
         date(input.businessDate());String external=text(input.externalReference(),120,"企业外部单号");
         if(input.companyId()==null)throw bad("请选择企业");
         Company company=companies.findById(input.companyId()).filter(Company::isEnabled).orElseThrow(()->bad("企业不存在或已停用"));
@@ -76,6 +87,7 @@ public class FinanceTradeService {
         validatePerson(input.referrerId());if(input.note()!=null && input.note().length()>500)throw bad("备注最多500字符");
         List<TradeLine> result=new ArrayList<>();BigDecimal due=BigDecimal.ZERO;
         for(ItemInput entry:input.items()){
+            if(entry==null || entry.productId()==null)throw bad("请选择交易商品");
             Product product=products.findById(entry.productId()).filter(p->p.getIsDeleted()==0).orElseThrow(()->bad("商品不存在"));
             ProductSpec spec=null;
             if(product.isSpecEnabled() && entry.specId()==null)throw bad("多规格商品须选择具体规格");
@@ -182,6 +194,11 @@ public class FinanceTradeService {
         trade.setStatus("CONFIRMED");trade.setConfirmedAt(time.now());trades.save(trade);
         support.audit("trade.confirm",id,null,Map.of("income",trade.getReceivedAmount(),"cost",trade.getCostAmount()),null,actor);return view(trade);
     }
+    @Transactional public TradeView finalizeIncome(UUID id,FinalIncomeInput input,UUID actor){
+        support.guard();FinanceTrade trade=mutable(id,input.version());
+        if(trade.getReceivedAmount().compareTo(trade.getDueAmount())!=0)text(input.reason(),500,"最终实收差异说明");
+        invalidate(trade);trade.setReceiptFinal(true);trades.save(trade);support.audit("trade.final_income",id,null,Map.of("received",trade.getReceivedAmount()),input.reason(),actor);return view(trade);
+    }
     @Transactional public TradeView referrer(UUID id,ReferrerInput input,UUID actor){
         support.guard();FinanceTrade trade=mutable(id,input.version());validatePerson(input.referrerId());text(input.reason(),500,"修改原因");UUID before=trade.getReferrerId();
         invalidate(trade);trade.setReferrerId(input.referrerId());trades.save(trade);support.audit("trade.referrer",id,before,input.referrerId(),input.reason(),actor);return view(trade);
@@ -205,11 +222,20 @@ public class FinanceTradeService {
             .filter(t->companyId==null || companyId.equals(t.getCompanyId())).filter(t->source==null || source.isBlank() || source.equals(t.getSource()))
             .filter(t->status==null || status.isBlank() || status.equals(t.getStatus()))
             .filter(t->search.isEmpty() || (t.getId()+" "+t.getCompanyName()+" "+t.getExternalReference()+" "+t.getCustomerName()+" "+t.getItemsJson()).toLowerCase(Locale.ROOT).contains(search)).toList();
+        Map<UUID,List<FinanceAdjustment>> byTrade=new HashMap<>();
+        if(!rows.isEmpty())for(var change:adjustments.findByTradeIdIn(rows.stream().map(FinanceTrade::getId).toList()))byTrade.computeIfAbsent(change.getTradeId(),k->new ArrayList<>()).add(change);
         BigDecimal received=BigDecimal.ZERO,cost=BigDecimal.ZERO,profit=BigDecimal.ZERO,due=BigDecimal.ZERO;long pending=0;
-        for(var row:rows){received=received.add(row.getReceivedAmount());due=due.add(row.getDueAmount().subtract(row.getReceivedAmount()).max(BigDecimal.ZERO));if(row.getCostAmount()==null)pending++;
-            if(!"DRAFT".equals(row.getStatus())){cost=cost.add(row.getCostAmount());profit=profit.add(row.getReceivedAmount().subtract(row.getCostAmount()));}}
+        for(var row:rows){var changes=byTrade.getOrDefault(row.getId(),List.of());BigDecimal income=effective(row,changes,false),actualCost=effective(row,changes,true);
+            received=received.add(income);if(!row.isReceiptFinal())due=due.add(row.getDueAmount().subtract(income).max(BigDecimal.ZERO));if(actualCost==null)pending++;
+            if(!"DRAFT".equals(row.getStatus())){cost=cost.add(actualCost);profit=profit.add(income.subtract(actualCost));}}
         int from=(int)Math.min((long)(page-1)*size,rows.size()),to=Math.min(from+size,rows.size());
-        return Map.of("list",rows.subList(from,to),"pagination",Map.of("page",page,"page_size",size,"total",rows.size()),"totals",Map.of("received",received,"confirmed_cost",cost,"confirmed_profit",profit,"receivable",due,"missing_cost_count",pending));
+        var summaries=rows.subList(from,to).stream().map(row->summary(row,byTrade.getOrDefault(row.getId(),List.of()))).toList();
+        return Map.of("list",summaries,"pagination",Map.of("page",page,"page_size",size,"total",rows.size()),"totals",Map.of("received",received,"confirmed_cost",cost,"confirmed_profit",profit,"receivable",due,"missing_cost_count",pending));
+    }
+    private Map<String,Object> summary(FinanceTrade trade,List<FinanceAdjustment> changes){
+        Map<String,Object> row=new LinkedHashMap<>();row.put("id",trade.getId());row.put("source_order_id",trade.getSourceOrderId());row.put("source",trade.getSource());row.put("company_id",trade.getCompanyId());row.put("company_name",trade.getCompanyName());row.put("customer_name",trade.getCustomerName());row.put("external_reference",trade.getExternalReference());
+        row.put("business_date",trade.getBusinessDate());row.put("due_amount",trade.getDueAmount());row.put("received_amount",effective(trade,changes,false));row.put("cost_amount",effective(trade,changes,true));row.put("receipt_final",trade.isReceiptFinal());
+        row.put("original_received_amount",trade.getReceivedAmount());row.put("original_cost_amount",trade.getCostAmount());row.put("items",items(trade));row.put("status",trade.getStatus());row.put("confirmed_at",trade.getConfirmedAt());row.put("settlement_id",trade.getSettlementId());row.put("referrer_id",trade.getReferrerId());row.put("has_adjustments",!changes.isEmpty());row.put("version",trade.getVersion());return row;
     }
     public Map<String,Object> previewImport(List<OfflineInput> input){
         if(input==null || input.isEmpty() || input.size()>1000)throw bad("每次导入1到1000笔企业交易");

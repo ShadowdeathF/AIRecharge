@@ -35,6 +35,7 @@ export function getPaymentBrandColor(method: string): string | undefined {
 const PAYMENT_LABELS: Record<string, string> = {
   alipay: "支付宝",
   wechat: "微信支付",
+  mock: "模拟支付（测试）",
 }
 
 /** 获取支付方式显示名称（优先 i18n t() 翻译，无翻译时回退到内置映射；大小写不敏感） */
@@ -44,6 +45,7 @@ export function getPaymentLabel(method: string, t?: (key: any) => string): strin
   if (t) {
     if (m === "alipay") return t("payment.alipay")
     if (m === "wechat") return t("payment.wechat")
+    if (m === "mock") return t("payment.mock")
   }
   return PAYMENT_LABELS[m] || method
 }

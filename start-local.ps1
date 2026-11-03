@@ -30,6 +30,7 @@ if (!$apiRunning) {
     $env:JWT_SECRET = $config.jwtSecret
     $env:PASSWORD_PLAIN = 'false'
     $env:MAIL_ENABLED = 'false'
+    $env:PAYMENT_MOCK_ENABLED = 'true'
     $env:SERVER_ADDRESS = '127.0.0.1'
     $env:SERVER_PORT = '8103'
     $env:CORS_ALLOWED_ORIGINS = 'http://127.0.0.1:3103,http://localhost:3103'

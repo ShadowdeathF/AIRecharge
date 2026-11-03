@@ -216,7 +216,7 @@ export interface CurrencyItem {
 // Payment
 // ============================================================
 
-export type ProviderType = 'epay' | 'native_alipay' | 'native_wxpay'
+export type ProviderType = 'epay' | 'native_alipay' | 'native_wxpay' | 'mock'
 
 export interface PaymentChannelConfig {
   // 易支付

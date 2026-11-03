@@ -21,7 +21,7 @@ import {
 import { QRCodeSVG } from "qrcode.react"
 import { toast } from "sonner"
 import { useLocale, useCart, useSiteConfig } from "@/lib/context"
-import { orderApi } from "@/services/api"
+import { orderApi, getApiErrorMessage } from "@/services/api"
 import type { OrderStatus } from "@/types"
 import { cn, detectPaymentDevice, isMobileDevice } from "@/lib/utils"
 import { PaymentIcon, getPaymentLabel, getPaymentBrandColor, getPaymentScanHint } from "@/components/shared/payment-icon"
@@ -45,6 +45,8 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
   const [qrcodeUrl, setQrcodeUrl] = useState<string>("")
   const [payUrlH5, setPayUrlH5] = useState<string>("")
   const [retrying, setRetrying] = useState(false)
+  const [mockPayment, setMockPayment] = useState(false)
+  const [mockPaying, setMockPaying] = useState(false)
   // 标记是否已经跳转过支付 App（从 sessionStorage 初始化，防止返回后文案错误）
   const [hasRedirected, setHasRedirected] = useState(false)
 
@@ -78,6 +80,7 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
     async function fetchOrderInfo() {
       try {
         const result = await orderApi.getStatus(orderId)
+        setMockPayment(result.mock_payment === true)
         if (result.remaining_seconds !== undefined) {
           setTimeLeft(result.remaining_seconds)
         }
@@ -125,6 +128,7 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
     const poll = setInterval(async () => {
       try {
         const result = await orderApi.getStatus(orderId)
+        setMockPayment(result.mock_payment === true)
         // 同步服务端倒计时，防止客户端时间漂移
         if (result.remaining_seconds !== undefined) {
           setTimeLeft(result.remaining_seconds)
@@ -170,6 +174,21 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
       toast.info(t("payment.statusRefreshed"))
     }
   }, [refreshCooldown, isRefreshing, orderId, t])
+
+  const handleMockPayment = async () => {
+    if (mockPaying) return
+    setMockPaying(true)
+    try {
+      const result = await orderApi.mockPay(orderId)
+      setStatus(result.status)
+      refreshCart()
+      toast.success(t("payment.success"))
+    } catch (err: unknown) {
+      toast.error(getApiErrorMessage(err, t))
+    } finally {
+      setMockPaying(false)
+    }
+  }
 
   // 重新发起支付（移动端重试）
   const handleRetryPayment = useCallback(async () => {
@@ -300,7 +319,24 @@ export default function PaymentPage({ params }: { params: Promise<{ orderId: str
           </span>
         </div>
 
-        {(!isMobile || isWechatMobile) ? (
+        {mockPayment ? (
+          <div className="flex w-full flex-col items-center gap-4 rounded-2xl border border-primary/20 bg-primary/5 p-6 text-center">
+            <div className="rounded-full bg-primary/10 p-3 text-primary">
+              <CheckCircle2 className="h-8 w-8" />
+            </div>
+            <h2 className="text-base font-semibold text-foreground">{t("payment.mockTitle")}</h2>
+            <p className="text-sm leading-6 text-muted-foreground">{t("payment.mockDescription")}</p>
+            <button
+              type="button"
+              onClick={handleMockPayment}
+              disabled={mockPaying || timeLeft <= 0}
+              className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50"
+            >
+              {mockPaying ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+              {t(mockPaying ? "payment.mockProcessing" : "payment.mockConfirm")}
+            </button>
+          </div>
+        ) : (!isMobile || isWechatMobile) ? (
           /* ========== PC / 微信移动端 — 二维码视图 ========== */
           <>
             <div

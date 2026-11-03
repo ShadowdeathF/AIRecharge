@@ -57,3 +57,15 @@ test('a guest response from before logout cannot install its token into the next
   const pending=a.api.cartApi.addItem({product_id:'test-product',spec_id:null,quantity:1});await reached;a.api.clearToken();a.api.clearSessionToken();a.api.setToken('test-next-account');
   release({ok:true,status:200,headers:{get:()=> 'test-obsolete-guest'},json:async()=>({code:0,data:null})});await pending;assert.equal(a.session().getGuestToken(),null);
 });
+
+test('mock payment confirmation uses the current tab account and guest session',async()=>{
+  const current=tab();
+  current.api.setToken('test-mock-account');
+  current.session().setGuestToken('test-mock-guest');
+  await current.api.orderApi.mockPay('test-order');
+  const request=current.calls[0];
+  assert.equal(request.url,'/api/orders/test-order/mock-pay');
+  assert.equal(request.options.method,'POST');
+  assert.equal(request.options.headers.Authorization,'Bearer test-mock-account');
+  assert.equal(request.options.headers['X-Session-Token'],'test-mock-guest');
+});

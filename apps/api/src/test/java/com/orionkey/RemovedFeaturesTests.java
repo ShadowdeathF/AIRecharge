@@ -31,7 +31,7 @@ class RemovedFeaturesTests {
         var repository = mock(PaymentChannelRepository.class);
         var channel = channel("usdt_trc20", "usdt");
         when(repository.findByChannelCodeAndIsDeleted("usdt_trc20", 0)).thenReturn(Optional.of(channel));
-        var service = new PaymentServiceImpl(repository, null, null, null, new ObjectMapper());
+        var service = new PaymentServiceImpl(repository, null, null, null, new ObjectMapper(), mock(MockPaymentService.class));
         assertThrows(BusinessException.class, () -> service.createPayment(UUID.randomUUID(), "usdt_trc20", BigDecimal.ONE, "pc"));
     }
 
@@ -40,7 +40,7 @@ class RemovedFeaturesTests {
         var repository = mock(PaymentChannelRepository.class);
         when(repository.findByEnabledAndIsDeletedOrderBySortOrderAsc(true, 0))
                 .thenReturn(List.of(channel("alipay", "epay"), channel("usdt_trc20", "usdt")));
-        MockMvcBuilders.standaloneSetup(new PaymentChannelController(repository)).build()
+        MockMvcBuilders.standaloneSetup(new PaymentChannelController(repository, mock(MockPaymentService.class))).build()
                 .perform(get("/payment-channels"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.length()").value(1))

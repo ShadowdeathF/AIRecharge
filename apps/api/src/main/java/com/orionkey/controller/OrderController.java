@@ -4,6 +4,7 @@ import com.orionkey.common.ApiResponse;
 import com.orionkey.context.RequestContext;
 import com.orionkey.service.DeliverService;
 import com.orionkey.service.OrderService;
+import com.orionkey.service.MockPaymentService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +25,12 @@ public class OrderController {
     @PostMapping
     public ApiResponse<?> createOrder(@RequestBody Map<String, Object> request,
                                       @RequestHeader(value = "X-Session-Token", required = false) String sessionToken,
-                                      HttpServletRequest httpRequest) {
+                                      HttpServletRequest httpRequest, HttpServletResponse response) {
+        if (MockPaymentService.CHANNEL_CODE.equals(request.get("payment_method"))
+                && RequestContext.getUserId() == null && (sessionToken == null || sessionToken.isBlank())) {
+            sessionToken = UUID.randomUUID().toString();
+            response.setHeader("X-Session-Token", sessionToken);
+        }
         return ApiResponse.success(orderService.createDirectOrder(
                 request, RequestContext.getUserId(), httpRequest.getRemoteAddr(), sessionToken));
     }

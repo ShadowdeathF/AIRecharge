@@ -37,6 +37,14 @@ pnpm dev:web
 
 本机已有 `start-local.cmd` / `stop-local.cmd` 辅助脚本，依赖本机 `.local` 内的运行环境。`.local`、数据库、上传文件、登录信息和构建产物不进入 Git，新克隆环境使用上面的标准开发方式。
 
+### 模拟支付测试
+
+后端环境变量 `PAYMENT_MOCK_ENABLED=true` 开启测试支付，本机 `start-local.ps1` 已启用。默认配置与生产环境模板为关闭。
+
+选择商品或购物车中的“模拟支付（测试）”下单，在支付页点击“模拟支付成功”，随后进入订单查询与正常发货流程。商品需要有可用库存。测试订单的支付方式为 `mock`，会计入经营统计与对账。
+
+接口为 `POST /api/orders/{orderId}/mock-pay`，前台封装为 `orderApi.mockPay(orderId)`。会员使用下单账号的 Bearer Token，游客使用下单时的 `X-Session-Token`。首次游客直接下单会返回此响应头，前台自动保存在当前标签页。接口仅接受有效期内的模拟支付订单，已付款或已发货时重复调用返回现有状态。
+
 ## 验证
 
 ```powershell

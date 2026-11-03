@@ -132,6 +132,11 @@ const zh = {
   // Payment
   "payment.title": "支付订单",
   "payment.waiting": "等待支付",
+  "payment.mock": "模拟支付（测试）",
+  "payment.mockTitle": "测试付款",
+  "payment.mockDescription": "点击下方按钮即可确认付款，继续验证发货、订单与对账流程。测试订单会计入后台统计。",
+  "payment.mockConfirm": "模拟支付成功",
+  "payment.mockProcessing": "正在确认付款…",
   "payment.scanToPay": "请扫码完成支付",
   "payment.scanWithAlipay": "请使用支付宝扫一扫",
   "payment.scanWithWechat": "请使用微信扫一扫",
@@ -663,6 +668,11 @@ const en: Record<keyof typeof zh, string> = {
   // Payment
   "payment.title": "Payment",
   "payment.waiting": "Waiting for Payment",
+  "payment.mock": "Simulated payment (test)",
+  "payment.mockTitle": "Test payment",
+  "payment.mockDescription": "Confirm payment below to test delivery, orders and reconciliation. Test orders are included in admin statistics.",
+  "payment.mockConfirm": "Simulate successful payment",
+  "payment.mockProcessing": "Confirming payment…",
   "payment.scanToPay": "Scan QR code to pay",
   "payment.scanWithAlipay": "Scan with Alipay",
   "payment.scanWithWechat": "Scan with WeChat",

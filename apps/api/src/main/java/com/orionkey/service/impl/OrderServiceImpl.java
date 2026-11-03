@@ -9,6 +9,7 @@ import com.orionkey.exception.BusinessException;
 import com.orionkey.repository.*;
 import com.orionkey.service.OrderService;
 import com.orionkey.service.PaymentService;
+import com.orionkey.service.MockPaymentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -35,6 +36,7 @@ public class OrderServiceImpl implements OrderService {
     private final SiteConfigRepository siteConfigRepository;
     private final PaymentChannelRepository paymentChannelRepository;
     private final PaymentService paymentService;
+    private final MockPaymentService mockPayments;
 
     @Override
     @Transactional
@@ -280,6 +282,8 @@ public class OrderServiceImpl implements OrderService {
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("order_id", order.getId());
         result.put("status", order.getStatus().name());
+        result.put("mock_payment", mockPayments.isEnabled()
+                && MockPaymentService.CHANNEL_CODE.equals(order.getPaymentMethod()));
         result.put("expires_at", order.getExpiresAt());
         // 返回服务端计算的剩余秒数，前端倒计时以此为准，不受客户端时钟影响
         if (order.getStatus() == OrderStatus.PENDING) {
@@ -406,6 +410,10 @@ public class OrderServiceImpl implements OrderService {
      * 支付渠道前置校验 — 在订单落库前确认渠道存在且启用，防止伪造不存在的支付方式绕过后续校验
      */
     private void validatePaymentMethod(String paymentMethod) {
+        if (MockPaymentService.CHANNEL_CODE.equals(paymentMethod)) {
+            mockPayments.requireEnabled();
+            return;
+        }
         if (paymentMethod == null || paymentMethod.isBlank()) {
             throw new BusinessException(ErrorCode.BAD_REQUEST, "支付方式不能为空");
         }

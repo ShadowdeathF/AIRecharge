@@ -14,6 +14,7 @@ import com.orionkey.service.EpayService;
 import com.orionkey.service.EpayService.ChannelConfig;
 import com.orionkey.service.EpayService.EpayResult;
 import com.orionkey.service.PaymentService;
+import com.orionkey.service.MockPaymentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -40,6 +41,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final OrderItemRepository orderItemRepository;
     private final EpayService epayService;
     private final ObjectMapper objectMapper;
+    private final MockPaymentService mockPayments;
 
     @Override
     public Map<String, Object> createPayment(UUID orderId, String paymentMethod, BigDecimal amount) {
@@ -48,6 +50,12 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public Map<String, Object> createPayment(UUID orderId, String paymentMethod, BigDecimal amount, String device) {
+        if (MockPaymentService.CHANNEL_CODE.equals(paymentMethod)) {
+            mockPayments.requireEnabled();
+            Order order = orderRepository.findById(orderId)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND, "订单不存在"));
+            return buildResult(order);
+        }
         // 1. 查找渠道并验证已启用
         PaymentChannel channel = paymentChannelRepository.findByChannelCodeAndIsDeleted(paymentMethod, 0)
                 .filter(PaymentChannel::isEnabled)

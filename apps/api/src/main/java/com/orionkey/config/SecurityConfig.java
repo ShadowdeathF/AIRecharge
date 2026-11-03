@@ -57,6 +57,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/orders/from-cart").permitAll()
                         .requestMatchers(HttpMethod.POST, "/orders/*/refresh").permitAll()
                         .requestMatchers(HttpMethod.POST, "/orders/*/repay").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/orders/*/mock-pay").permitAll()
                         .requestMatchers("/payments/webhook/**").permitAll()
                         .requestMatchers("/cart/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()

@@ -6,6 +6,7 @@ import type { UserProfile, CartItem, SiteConfig } from "@/types"
 import { clearToken, clearSessionToken, cartApi, siteApi, currencyApi, withMockFallback } from "@/services/api"
 import { mockCartData } from "./mock-data"
 import { initCurrencySymbols } from "./utils"
+import { getAuthToken, getGuestToken, getSessionOwner, getStoredUser, setStoredUser } from "./tab-session"
 import { getSiteColor } from "./appearance"
 
 // ============================================================
@@ -264,14 +265,7 @@ export function AppProviders({ children, initialConfig }: { children: ReactNode;
   const [authLoaded, setAuthLoaded] = useState(false)
 
   useEffect(() => {
-    const saved = localStorage.getItem("userProfile")
-    if (saved) {
-      try {
-        setUserState(JSON.parse(saved))
-      } catch (e) {
-        console.error("Failed to parse saved user profile:", e)
-      }
-    }
+    setUserState(getStoredUser<UserProfile>())
     setAuthLoaded(true)
   }, [])
 
@@ -279,11 +273,7 @@ export function AppProviders({ children, initialConfig }: { children: ReactNode;
     setCartItems([])
     setCartTotal(0)
     setUserState(u)
-    if (u) {
-      localStorage.setItem("userProfile", JSON.stringify(u))
-    } else {
-      localStorage.removeItem("userProfile")
-    }
+    setStoredUser(u)
   }, [])
 
   const isLoggedIn = useMemo(() => !!user, [user])
@@ -300,14 +290,14 @@ export function AppProviders({ children, initialConfig }: { children: ReactNode;
   const [cartLoading, setCartLoading] = useState(false)
 
   const refreshCart = useCallback(async () => {
-    const owner = `${localStorage.getItem("auth_token") || "guest"}:${localStorage.getItem("session_token") || ""}`
+    const owner = getSessionOwner()
     setCartLoading(true)
     try {
       const cart = await withMockFallback(
         () => cartApi.get(),
         () => mockCartData()
       )
-      const currentOwner = `${localStorage.getItem("auth_token") || "guest"}:${localStorage.getItem("session_token") || ""}`
+      const currentOwner = getSessionOwner()
       if (owner === currentOwner) {
         setCartItems(cart.items)
         setCartTotal(cart.total_amount)
@@ -321,8 +311,8 @@ export function AppProviders({ children, initialConfig }: { children: ReactNode;
 
   // Fetch cart on mount (if logged in or has session token)
   useEffect(() => {
-    const hasAuth = localStorage.getItem("auth_token")
-    const hasSession = localStorage.getItem("session_token")
+    const hasAuth = getAuthToken()
+    const hasSession = getGuestToken()
     if (hasAuth || hasSession) {
       refreshCart()
     }
@@ -337,7 +327,7 @@ export function AppProviders({ children, initialConfig }: { children: ReactNode;
   }, [refreshCart])
 
   const updateItem = useCallback(async (itemId: string, quantity: number) => {
-    const owner = localStorage.getItem("auth_token")
+    const owner = getAuthToken()
     // Optimistic update: 立即更新本地状态，避免等待 API 往返导致页面刷新
     const prevItems = [...cartItems]
     const prevTotal = cartTotal
@@ -357,7 +347,7 @@ export function AppProviders({ children, initialConfig }: { children: ReactNode;
       await refreshCart()
     } catch (err) {
       // API 失败（如库存不足）→ 回滚到之前的状态
-      if (owner === localStorage.getItem("auth_token")) {
+      if (owner === getAuthToken()) {
         setCartItems(prevItems)
         setCartTotal(prevTotal)
       }

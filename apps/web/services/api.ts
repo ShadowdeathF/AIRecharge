@@ -1,3 +1,4 @@
+import { getAuthToken, setAuthToken, clearAuthToken, getGuestToken, setGuestToken, clearGuestToken, getSessionVersion } from "@/lib/tab-session"
 import type {
   ApiResponse,
   PaginatedData,
@@ -58,29 +59,19 @@ class ApiError extends Error {
 // Token management
 // ============================================================
 
-function getToken(): string | null {
-  if (typeof window === "undefined") return null
-  return localStorage.getItem("auth_token")
-}
-
-export function setToken(token: string) {
-  localStorage.setItem("auth_token", token)
-}
-
-export function clearToken() {
-  localStorage.removeItem("auth_token")
-}
+export const getToken = getAuthToken
+export const setToken = setAuthToken
+export const clearToken = clearAuthToken
 
 /**
  * JWT 过期/无效时：清除本地登录态，跳转登录页
  * 使用防抖避免多个并发请求同时触发多次跳转
  */
 let redirecting = false
-function handleUnauthorized() {
-  if (typeof window === "undefined" || redirecting) return
+function handleUnauthorized(expectedToken: string | null) {
+  if (typeof window === "undefined" || redirecting || getToken() !== expectedToken) return
   redirecting = true
   clearToken()
-  localStorage.removeItem("userProfile")
   const currentPath = window.location.pathname
   // 已经在登录页则不再跳转
   if (currentPath === "/login") {
@@ -94,18 +85,9 @@ function handleUnauthorized() {
 // Session Token (guest cart)
 // ============================================================
 
-function getSessionToken(): string | null {
-  if (typeof window === "undefined") return null
-  return localStorage.getItem("session_token")
-}
-
-function setSessionToken(token: string) {
-  localStorage.setItem("session_token", token)
-}
-
-export function clearSessionToken() {
-  localStorage.removeItem("session_token")
-}
+const getSessionToken = getGuestToken
+const setSessionToken = setGuestToken
+export const clearSessionToken = clearGuestToken
 
 // ============================================================
 // Query builder
@@ -171,6 +153,7 @@ export async function request<T>(
   options: RequestInit = {}
 ): Promise<T> {
   const token = getToken()
+  const sessionVersion = getSessionVersion()
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...(options.headers as Record<string, string>),
@@ -204,13 +187,13 @@ export async function request<T>(
 
   // Capture session token from response
   const newSessionToken = res.headers.get("X-Session-Token")
-  if (newSessionToken) {
+  if (newSessionToken && getSessionVersion() === sessionVersion && getSessionToken() === sessionToken && (getToken() === token || token === null)) {
     setSessionToken(newSessionToken)
   }
 
   if (!res.ok) {
     if (res.status === 401) {
-      handleUnauthorized()
+      handleUnauthorized(token)
     }
     const body = await res.json().catch(() => ({ code: res.status, message: res.statusText }))
     throw new ApiError(body.code || res.status, body.message || res.statusText, body.params)
@@ -223,6 +206,17 @@ export async function request<T>(
   }
 
   return body.data
+}
+
+export async function downloadRequest(path: string): Promise<Blob> {
+  const token = getToken()
+  const response = await fetch(`${API_BASE}${path}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+  if (response.status === 401) handleUnauthorized(token)
+  if (!response.ok) {
+    const body = await response.json().catch(() => null)
+    throw new ApiError(body?.code || response.status, body?.message || `Export failed (${response.status})`, body?.params)
+  }
+  return response.blob()
 }
 
 async function uploadRequest<T>(path: string, formData: FormData): Promise<T> {
@@ -240,7 +234,7 @@ async function uploadRequest<T>(path: string, formData: FormData): Promise<T> {
 
   if (!res.ok) {
     if (res.status === 401) {
-      handleUnauthorized()
+      handleUnauthorized(token)
     }
     const body = await res.json().catch(() => ({ code: res.status, message: res.statusText }))
     throw new ApiError(body.code || res.status, body.message || res.statusText, body.params)
@@ -412,16 +406,8 @@ export const adminWorkbenchApi = {
     request<import("@/types/workbench").WorkbenchOverview>(`/admin/workbench/overview?${buildQuery({ ...params })}`),
   orders: (params: import("@/types/workbench").WorkbenchFilters & { page?: number; page_size?: number }) =>
     request<import("@/types/workbench").WorkbenchLedger>(`/admin/workbench/orders?${buildQuery({ ...params })}`),
-  exportCsv: async (params: import("@/types/workbench").WorkbenchFilters & { ids?: string }) => {
-    const token = getToken()
-    const response = await fetch(`${API_BASE}/admin/workbench/export?${buildQuery({ ...params })}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
-    if (response.status === 401) handleUnauthorized()
-    if (!response.ok) {
-      const error = await response.json().catch(() => null)
-      throw new Error(error?.message || `Export failed (${response.status})`)
-    }
-    return response.blob()
-  },
+  exportCsv: (params: import("@/types/workbench").WorkbenchFilters & { ids?: string }) =>
+    downloadRequest(`/admin/workbench/export?${buildQuery({ ...params })}`),
 }
 
 // ============================================================

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Eye, EyeOff, LogIn } from "lucide-react"
@@ -25,6 +25,11 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const { turnstileToken, setTurnstileToken, handleTurnstileReset } = useTurnstile()
 
+  useEffect(() => {
+    const savedAccount = localStorage.getItem("remembered_account")
+    if (savedAccount) { setAccount(savedAccount); setRememberMe(true) }
+  }, [])
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!account.trim() || !password.trim()) return
@@ -41,10 +46,11 @@ export default function LoginPage() {
       setUser(result.user)
 
       if (rememberMe) {
-        localStorage.setItem("rememberMe", "true")
+        localStorage.setItem("remembered_account", account.trim())
       } else {
-        localStorage.removeItem("rememberMe")
+        localStorage.removeItem("remembered_account")
       }
+      localStorage.removeItem("rememberMe")
 
       // Refresh cart after login (merges session cart)
       await refreshCart()

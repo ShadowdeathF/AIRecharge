@@ -1,4 +1,4 @@
-import { request } from "./api"
+import { request, downloadRequest } from "./api"
 import type { Money } from "@/types/finance"
 import type { PaginatedData } from "@/types"
 import type { FinanceCompany,CompanyQuote,CompanyMember,PurchaseView,PurchaseInput,PurchaseLot,ReceiveInput,FinancePerson,FinanceFilters,LedgerResult,TradeView,OfflineInput,ImportPreview,FinanceOverview,FinanceTrade,ProfitPreview,Settlement,SettlementView,QuarterPreview,CashInput,CashMovement } from "@/types/finance"
@@ -52,6 +52,6 @@ export const financeApi={
   settleQuarter:(quarter:string,idempotency_key:string,preview_token:string)=>send<SettlementView>("/admin/finance/quarters",{quarter,idempotency_key,preview_token}),
   adjust:(body:{trade_id:string;income_delta:string;cost_delta:string;referrer_id:string|null;change_referrer:boolean;reason:string;idempotency_key:string})=>send<SettlementView>("/admin/finance/adjustments",body),
   cash:(body:CashInput)=>send<CashMovement>("/admin/finance/cash",body),
-  export:async(filters:FinanceFilters)=>{const token=localStorage.getItem("auth_token");const res=await fetch(`${process.env.NEXT_PUBLIC_API_BASE||"/api"}/admin/finance/trades/export?${query(filters)}`,{headers:token?{Authorization:`Bearer ${token}`}:{}});if(!res.ok){const error=await res.json().catch(()=>null);throw new Error(error?.message||"对账单导出失败")}return res.blob()},
-  exportDocument:async(id:string)=>{const token=localStorage.getItem("auth_token");const res=await fetch(`${process.env.NEXT_PUBLIC_API_BASE||"/api"}/admin/finance/settlements/${id}/export`,{headers:token?{Authorization:`Bearer ${token}`}:{}});if(!res.ok)throw new Error("结算单导出失败");return res.blob()},
+  export:(filters:FinanceFilters)=>downloadRequest(`/admin/finance/trades/export?${query(filters)}`),
+  exportDocument:(id:string)=>downloadRequest(`/admin/finance/settlements/${id}/export`),
 }

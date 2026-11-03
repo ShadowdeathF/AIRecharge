@@ -21,6 +21,9 @@ public class CardImportBatch extends BaseEntity {
 
     private UUID specId;
 
+    /** Actual procurement receipt used to attribute the cost of delivered keys. */
+    private UUID procurementLotId;
+
     @Column(nullable = false)
     private UUID importedBy;
 

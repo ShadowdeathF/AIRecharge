@@ -28,6 +28,7 @@ public class AdminCardKeyServiceImpl implements AdminCardKeyService {
     private final CardImportBatchRepository cardImportBatchRepository;
     private final ProductRepository productRepository;
     private final ProductSpecRepository productSpecRepository;
+    private final com.orionkey.finance.ProcurementService procurementService;
     private final OrderItemRepository orderItemRepository;
 
     @Override
@@ -137,10 +138,15 @@ public class AdminCardKeyServiceImpl implements AdminCardKeyService {
             cardKeyRepository.save(key);
         }
 
+        if (req.get("procurement_lot_id") != null) {
+            procurementService.linkCardBatch(UUID.fromString(req.get("procurement_lot_id").toString()), batch.getId(), importedBy);
+        }
+
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("id", batch.getId());
         result.put("product_id", batch.getProductId());
         result.put("spec_id", batch.getSpecId());
+        result.put("procurement_lot_id", batch.getProcurementLotId());
         result.put("imported_by", batch.getImportedBy());
         result.put("total_count", batch.getTotalCount());
         result.put("success_count", batch.getSuccessCount());

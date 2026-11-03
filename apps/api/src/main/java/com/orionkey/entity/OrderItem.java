@@ -30,6 +30,10 @@ public class OrderItem extends BaseEntity {
 
     private String specName;
 
+    private UUID companyQuoteId;
+
+    private String priceSource;
+
     @Column(nullable = false)
     private int quantity;
 

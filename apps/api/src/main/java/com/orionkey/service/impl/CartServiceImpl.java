@@ -22,6 +22,7 @@ import java.util.*;
 @Service
 @RequiredArgsConstructor
 public class CartServiceImpl implements CartService {
+    private final com.orionkey.finance.CompanyPricingService companyPricingService;
 
     private final CartItemRepository cartItemRepository;
     private final ProductRepository productRepository;
@@ -216,6 +217,12 @@ public class CartServiceImpl implements CartService {
             }
         }
 
+        if (product != null && product.getIsDeleted() == 0 && (!product.isSpecEnabled() || item.getSpecId() != null)) {
+            var quote = companyPricingService.resolve(item.getUserId(), product, item.getSpecId(), item.getQuantity());
+            unitPrice = quote.unitPrice();
+            map.put("price_source", quote.source());
+            map.put("company_name", quote.companyName());
+        }
         map.put("product_title", productTitle);
         map.put("spec_name", specName);
         map.put("cover_url", coverUrl);

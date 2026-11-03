@@ -23,6 +23,9 @@ public class User extends BaseEntity {
     @Column(unique = true, nullable = false)
     private String email;
 
+    /** Administrator-managed enterprise membership; never accepted from public registration. */
+    private java.util.UUID companyId;
+
     @Column(nullable = false)
     private String passwordHash;
 

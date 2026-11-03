@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface UserRepository extends JpaRepository<User, UUID> {
+    java.util.List<User> findByCompanyId(UUID companyId);
 
     Optional<User> findByUsername(String username);
 

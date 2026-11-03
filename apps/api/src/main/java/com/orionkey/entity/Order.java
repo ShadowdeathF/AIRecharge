@@ -22,6 +22,10 @@ public class Order extends BaseEntity {
 
     private UUID userId;
 
+    private UUID companyId;
+
+    private String companyName;
+
     private String email;
 
     @Column(precision = 10, scale = 2)

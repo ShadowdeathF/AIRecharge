@@ -42,6 +42,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             String token = extractToken(request);
             if (StringUtils.hasText(token)) {
+                response.setHeader("Cache-Control", "private, no-store");
+                response.addHeader("Vary", "Authorization");
                 Claims claims = jwtUtils.parseTokenSafe(token);
                 if (claims != null) {
                     UUID userId = UUID.fromString(claims.getSubject());

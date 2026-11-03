@@ -29,7 +29,7 @@ public class OrderServiceImpl implements OrderService {
     private final OrderItemRepository orderItemRepository;
     private final ProductRepository productRepository;
     private final ProductSpecRepository productSpecRepository;
-    private final WholesaleRuleRepository wholesaleRuleRepository;
+    private final com.orionkey.finance.CompanyPricingService companyPricingService;
     private final CartItemRepository cartItemRepository;
     private final CardKeyRepository cardKeyRepository;
     private final SiteConfigRepository siteConfigRepository;
@@ -90,8 +90,10 @@ public class OrderServiceImpl implements OrderService {
                     Map.of("available", available));
         }
 
-        BigDecimal unitPrice = getUnitPrice(product, specId, quantity);
+        var priceQuote = companyPricingService.resolve(userId, product, specId, quantity);
+        BigDecimal unitPrice = priceQuote.unitPrice();
         BigDecimal totalAmount = unitPrice.multiply(BigDecimal.valueOf(quantity));
+        companyPricingService.assertExpectedTotal(req.get("expected_total"), totalAmount);
         if (totalAmount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new BusinessException(ErrorCode.BAD_REQUEST, "订单金额异常，请联系客服");
         }
@@ -99,6 +101,8 @@ public class OrderServiceImpl implements OrderService {
 
         Order order = new Order();
         order.setUserId(userId);
+        order.setCompanyId(priceQuote.companyId());
+        order.setCompanyName(priceQuote.companyName());
         order.setEmail(email);
         order.setTotalAmount(totalAmount);
         order.setActualAmount(totalAmount);
@@ -125,6 +129,8 @@ public class OrderServiceImpl implements OrderService {
         item.setSpecName(specName);
         item.setQuantity(quantity);
         item.setUnitPrice(unitPrice);
+        item.setCompanyQuoteId(priceQuote.quoteId());
+        item.setPriceSource(priceQuote.source());
         item.setSubtotal(totalAmount);
         orderItemRepository.save(item);
 
@@ -216,7 +222,10 @@ public class OrderServiceImpl implements OrderService {
                         Map.of("available", available, "title", product.getTitle()));
             }
 
-            BigDecimal unitPrice = getUnitPrice(product, ci.getSpecId(), ci.getQuantity());
+            var priceQuote = companyPricingService.resolve(userId, product, ci.getSpecId(), ci.getQuantity());
+            BigDecimal unitPrice = priceQuote.unitPrice();
+            order.setCompanyId(priceQuote.companyId());
+            order.setCompanyName(priceQuote.companyName());
             BigDecimal subtotal = unitPrice.multiply(BigDecimal.valueOf(ci.getQuantity()));
             totalAmount = totalAmount.add(subtotal);
 
@@ -234,6 +243,8 @@ public class OrderServiceImpl implements OrderService {
             item.setSpecName(specName);
             item.setQuantity(ci.getQuantity());
             item.setUnitPrice(unitPrice);
+            item.setCompanyQuoteId(priceQuote.quoteId());
+            item.setPriceSource(priceQuote.source());
             item.setSubtotal(subtotal);
             orderItemRepository.save(item);
         }
@@ -244,6 +255,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         order.setTotalAmount(totalAmount);
+        companyPricingService.assertExpectedTotal(req.get("expected_total"), totalAmount);
         order.setActualAmount(totalAmount);
         orderRepository.save(order);
 
@@ -304,33 +316,6 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
-    private BigDecimal getUnitPrice(Product product, UUID specId, int quantity) {
-        BigDecimal basePrice = product.getBasePrice();
-        if (specId != null) {
-            // F1: 严格校验规格归属 — 防止用低价规格 ID 篡改高价商品的价格
-            ProductSpec spec = productSpecRepository.findById(specId)
-                    .filter(s -> s.getProductId().equals(product.getId()) && s.getIsDeleted() == 0)
-                    .orElseThrow(() -> new BusinessException(ErrorCode.SPEC_NOT_FOUND, "商品规格不存在或与商品不匹配"));
-            basePrice = spec.getPrice();
-        }
-
-        if (product.isWholesaleEnabled()) {
-            List<WholesaleRule> rules;
-            if (specId != null) {
-                rules = wholesaleRuleRepository.findByProductIdAndSpecIdOrderByMinQuantityAsc(product.getId(), specId);
-            } else {
-                rules = wholesaleRuleRepository.findByProductIdAndSpecIdIsNullOrderByMinQuantityAsc(product.getId());
-            }
-            // Find matching tier (highest minQuantity <= quantity)
-            for (int i = rules.size() - 1; i >= 0; i--) {
-                if (quantity >= rules.get(i).getMinQuantity()) {
-                    return rules.get(i).getUnitPrice();
-                }
-            }
-        }
-        return basePrice;
-    }
-
     private void checkPendingOrderLimits(UUID userId, String clientIp, String email) {
         // 邮箱和 IP 共用同一配置值（面板"最大待支付订单数"）
         int maxPending = getConfigInt("max_pending_orders_per_user", 5);
@@ -373,6 +358,8 @@ public class OrderServiceImpl implements OrderService {
         map.put("id", o.getId());
         map.put("total_amount", o.getTotalAmount());
         map.put("actual_amount", o.getActualAmount());
+        map.put("company_id", o.getCompanyId());
+        map.put("company_name", o.getCompanyName());
         map.put("status", o.getStatus().name());
         map.put("order_type", o.getOrderType().name());
         map.put("payment_method", o.getPaymentMethod());
@@ -389,6 +376,7 @@ public class OrderServiceImpl implements OrderService {
             im.put("spec_name", i.getSpecName());
             im.put("quantity", i.getQuantity());
             im.put("unit_price", i.getUnitPrice());
+            im.put("price_source", i.getPriceSource());
             im.put("subtotal", i.getSubtotal());
             return im;
         }).toList());

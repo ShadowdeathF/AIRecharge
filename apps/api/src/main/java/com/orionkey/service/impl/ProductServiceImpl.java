@@ -32,6 +32,7 @@ public class ProductServiceImpl implements ProductService {
     private final WholesaleRuleRepository wholesaleRuleRepository;
     private final CardKeyRepository cardKeyRepository;
     private final OrderItemRepository orderItemRepository;
+    private final com.orionkey.finance.CompanyPricingService companyPricingService;
 
     @Override
     public PageResult<?> listPublicProducts(UUID categoryId, String keyword, int page, int pageSize) {
@@ -43,7 +44,7 @@ public class ProductServiceImpl implements ProductService {
         } else {
             productPage = productRepository.findPublicProducts(categoryId, pageable);
         }
-        var list = productPage.getContent().stream().map(this::toProductCard).toList();
+        var list = productPage.getContent().stream().map(p -> personalized(p, toProductCard(p))).toList();
         return PageResult.of(productPage, list);
     }
 
@@ -57,7 +58,7 @@ public class ProductServiceImpl implements ProductService {
         if (!product.isSpecEnabled()) {
             detail.put("specs", List.of());
         }
-        return detail;
+        return personalized(product, detail);
     }
 
     @Override
@@ -253,6 +254,31 @@ public class ProductServiceImpl implements ProductService {
         return cardKeyRepository.countByProductIdAndSpecIdIsNullAndStatus(productId, CardKeyStatus.AVAILABLE);
     }
 
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> personalized(Product product, Map<String, Object> map) {
+        UUID userId = com.orionkey.context.RequestContext.getUserId();
+        if (userId == null || companyPricingService.companyFor(userId) == null) return map;
+        if (!product.isSpecEnabled()) {
+            var quote = companyPricingService.resolve(userId, product, null, 1);
+            map.put("base_price", quote.unitPrice()); map.put("price_source", quote.source()); map.put("quote_id", quote.quoteId()); map.put("company_name", quote.companyName());
+            if ("COMPANY".equals(quote.source())) { map.put("wholesale_enabled", false); map.put("wholesale_rules", List.of()); }
+        } else {
+            var options = productSpecRepository.findByProductIdAndIsDeletedOrderBySortOrderAsc(product.getId(), 0);
+            BigDecimal minimum = null;
+            for (ProductSpec spec : options) {
+                var quote = companyPricingService.resolve(userId, product, spec.getId(), 1);
+                minimum = minimum == null ? quote.unitPrice() : minimum.min(quote.unitPrice());
+                if (map.get("specs") instanceof List<?> entries) for (Object entry : entries) {
+                    Map<String, Object> row = (Map<String, Object>) entry;
+                    if (spec.getId().equals(row.get("id"))) { row.put("price", quote.unitPrice()); row.put("price_source", quote.source()); row.put("quote_id", quote.quoteId()); }
+                }
+            }
+            if (minimum != null) map.put("base_price", minimum);
+            map.put("company_name", companyPricingService.companyFor(userId).getName());
+        }
+        return map;
+    }
+
     private Map<String, Object> toProductCard(Product p) {
         Map<String, Object> map = new LinkedHashMap<>();
         map.put("id", p.getId());
@@ -295,6 +321,7 @@ public class ProductServiceImpl implements ProductService {
                     Map<String, Object> m = new HashMap<>();
                     m.put("min_quantity", r.getMinQuantity());
                     m.put("unit_price", r.getUnitPrice());
+                    m.put("spec_id", r.getSpecId());
                     return m;
                 }).toList());
         return map;

@@ -271,7 +271,7 @@ public class FinanceTradeService {
         var rows=trades.findByBusinessDateBetweenOrderByBusinessDateDescCreatedAtDesc(start,end).stream()
             .filter(t->companyId==null || companyId.equals(t.getCompanyId())).filter(t->source==null || source.isBlank() || source.equals(t.getSource()))
             .filter(t->status==null || status.isBlank() || status.equals(t.getStatus()))
-            .filter(t->search.isEmpty() || (t.getId()+" "+t.getCompanyName()+" "+t.getExternalReference()+" "+t.getCustomerName()+" "+t.getItemsJson()).toLowerCase(Locale.ROOT).contains(search)).toList();
+            .filter(t->search.isEmpty() || (t.getId()+" "+t.getSourceOrderId()+" "+t.getCompanyName()+" "+t.getExternalReference()+" "+t.getCustomerName()+" "+t.getItemsJson()).toLowerCase(Locale.ROOT).contains(search)).toList();
         Map<UUID,List<FinanceAdjustment>> byTrade=new HashMap<>();
         if(!rows.isEmpty())for(var change:adjustments.findByTradeIdIn(rows.stream().map(FinanceTrade::getId).toList()))byTrade.computeIfAbsent(change.getTradeId(),k->new ArrayList<>()).add(change);
         BigDecimal received=BigDecimal.ZERO,cost=BigDecimal.ZERO,profit=BigDecimal.ZERO,due=BigDecimal.ZERO;long pending=0;

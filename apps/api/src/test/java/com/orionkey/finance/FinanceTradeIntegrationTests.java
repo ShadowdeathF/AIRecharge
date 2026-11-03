@@ -46,6 +46,7 @@ class FinanceTradeIntegrationTests {
         OrderItem item=new OrderItem();item.setOrderId(order.getId());item.setProductId(p.getId());item.setProductTitle(p.getTitle());item.setQuantity(2);item.setUnitPrice(new BigDecimal("120.00"));item.setSubtotal(new BigDecimal("240.00"));em.persist(item);
         var a=trades.syncOrder(order.getId());var b=trades.syncOrder(order.getId());
         assertEquals(a.trade().getId(),b.trade().getId());assertTrue(a.trade().isReceiptFinal());assertNull(a.trade().getCostAmount());
+        assertEquals(1,((List<?>)trades.list(LocalDate.now(),LocalDate.now(),null,null,null,order.getId().toString(),1,20).get("list")).size());
         assertThrows(BusinessException.class,()->trades.confirm(a.trade().getId(),a.trade().getVersion(),actor));
     }
     @Test void companyExternalReferenceAndReceiptRetriesDoNotDuplicateMoney(){

@@ -18,6 +18,9 @@ public class FinanceSupport {
     public static final ZoneId ZONE = ZoneId.of("Asia/Shanghai");
     private final ObjectMapper mapper;
     private final FinanceAuditRepository audits;
+    private final com.orionkey.finance.repository.FinanceControlRepository controls;
+    public void guard() { controls.lockMain().orElseThrow(()->bad("财务初始化未完成")); }
+    public static void version(long actual,Long expected) { if(expected==null || expected!=actual) throw bad("记录已变更，请刷新后再操作"); }
     public static BusinessException bad(String message) { return new BusinessException(ErrorCode.BAD_REQUEST,message); }
     public static String text(String value,int max,String label) {
         if(value==null || value.isBlank() || value.length()>max) throw bad(label+"不能为空且不得超过"+max+"字符");

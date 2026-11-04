@@ -1,5 +1,7 @@
 "use client"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useId, useRef, useState } from "react"
+import { AnimatePresence, LayoutGroup } from "motion/react"
+import { SelectionIndicator } from "@/components/ui/selection-indicator"
 import Link from "next/link"
 import { ArrowRight, Box, CalendarDays, ChevronRight, RefreshCw, AlertCircle } from "lucide-react"
 import { toast } from "sonner"
@@ -14,6 +16,7 @@ import { WorkbenchOrderDetail } from "@/components/admin/workbench-order-detail"
 import type { WorkbenchFilters, WorkbenchOverview, WorkbenchLedger, WorkbenchOrder } from "@/types/workbench"
 import "./workbench.css"
 export default function AdminDashboardPage() {
+  const periodGroup = useId()
   const { locale } = useLocale(), zh = locale === "zh"
   const [range, setRange] = useState<DateRange>(() => periodRange("7")), [draft, setDraft] = useState<DateRange>(() => periodRange("7"))
   const [period, setPeriod] = useState<Period>("7"), [payment, setPayment] = useState(""), [compare, setCompare] = useState(false)
@@ -26,6 +29,16 @@ export default function AdminDashboardPage() {
   const [refresh, setRefresh] = useState(0), [exporting, setExporting] = useState(false), [rangeError, setRangeError] = useState("")
   const [metric, setMetric] = useState<"sales_amount" | "order_count">("sales_amount")
   const dateInput = useRef<HTMLInputElement>(null)
+  const pendingLedgerFocus = useRef(false)
+  const openDay = (date: string) => { pendingLedgerFocus.current = false; setSelectedDate(date) }
+  const finishInspectorExit = () => {
+    if (!pendingLedgerFocus.current) return
+    requestAnimationFrame(() => {
+      if (!pendingLedgerFocus.current) return
+      pendingLedgerFocus.current = false
+      document.querySelector<HTMLElement>("#workbench-ledger")?.focus()
+    })
+  }
   const retry = useCallback(() => setRefresh(value => value + 1), [])
   const errorText = (error: unknown) => error instanceof Error ? error.message : (zh ? "数据加载失败，请重试。" : "Unable to load data. Please retry.")
   useEffect(() => {
@@ -65,7 +78,7 @@ export default function AdminDashboardPage() {
   return <div className={`workbench ${selectedDate ? "has-inspector" : ""}`} data-testid="admin-workbench">
     <div className="wb-main-column"><header className="wb-heading"><div><h1>{zh ? "经营工作台" : "Business workspace"}</h1><p>{zh ? "从汇总到每一笔订单" : "From the overview to every transaction"}</p></div><button type="button" className="wb-icon-button" aria-label={zh ? "刷新工作台" : "Refresh workspace"} title={zh ? "刷新数据" : "Refresh data"} onClick={retry} disabled={overviewLoading || ledgerLoading}><RefreshCw size={17} className={overviewLoading ? "animate-spin" : ""} /></button></header>
       <section className="wb-filters" aria-label={zh ? "全局统计筛选" : "Global report filters"}>
-        <div className="wb-periods">{periods.map(item => <button type="button" key={item.key} aria-pressed={period === item.key} onClick={() => choosePeriod(item.key)}>{item.label}</button>)}</div>
+        <LayoutGroup id={periodGroup}><div className="wb-periods">{periods.map(item => <button type="button" key={item.key} aria-pressed={period === item.key} onClick={() => choosePeriod(item.key)}>{period === item.key && <SelectionIndicator />}{item.label}</button>)}</div></LayoutGroup>
         <form className="wb-date-form" onSubmit={event => { event.preventDefault(); if (!validRange(draft)) { setRangeError(zh ? "请选择不晚于今天、最长366天的有效日期范围。" : "Choose a valid range up to 366 days, ending no later than today."); return }; setPeriod("custom"); setRangeError(""); changeRange(draft) }}>
           <CalendarDays size={15} /><input ref={dateInput} aria-label={zh ? "统计开始日期" : "Report start date"} type="date" value={draft.start} max={businessToday()} onChange={event => { setDraft(value => ({ ...value, start: event.target.value })); setPeriod("custom") }} /><ArrowRight size={12} /><input aria-label={zh ? "统计结束日期" : "Report end date"} type="date" value={draft.end} max={businessToday()} onChange={event => { setDraft(value => ({ ...value, end: event.target.value })); setPeriod("custom") }} /><button type="submit">{zh ? "应用" : "Apply"}</button>
         </form>
@@ -75,8 +88,10 @@ export default function AdminDashboardPage() {
       {overviewLoading && !overview ? <div className="wb-overview-loading" role="status">{zh ? "正在汇总经营数据…" : "Loading overview…"}</div> : overviewError ? <LedgerState loading={false} error={overviewError} empty={false} retry={retry} /> : overview && <>
         <WorkbenchSummary summary={overview.summary} previous={overview.comparison.summary} compare={compare} onInspect={inspectMetric} />
         <div className={`wb-chart-region ${selectedDate ? "has-inspector" : ""}`}>
-          <WorkbenchChart trend={overview.trend} selectedDate={selectedDate} onSelect={setSelectedDate} compare={compare} onCompare={setCompare} metric={metric} onMetric={setMetric} start={range.start} end={range.end} />
-          {selectedDate && <WorkbenchDay date={selectedDate} data={dayData} loading={dayLoading} error={dayError} retry={retry} payment={dayPayment} globalPayment={payment} onPayment={setDayPayment} onClose={() => setSelectedDate(null)} onViewAll={() => { setLedgerDay(selectedDate); setPayment(payment || dayPayment); setDayPayment(""); setStatus(""); setKeyword(""); resetLedger(); setSelectedDate(null); setTimeout(() => document.querySelector<HTMLElement>("#workbench-ledger")?.focus(), 0) }} onExport={() => void exportCsv("day")} onOpen={openOrder} exporting={exporting} />}
+          <WorkbenchChart trend={overview.trend} selectedDate={selectedDate} onSelect={openDay} compare={compare} onCompare={setCompare} metric={metric} onMetric={setMetric} start={range.start} end={range.end} />
+          <AnimatePresence initial={false} onExitComplete={finishInspectorExit}>
+            {selectedDate && <WorkbenchDay date={selectedDate} data={dayData} loading={dayLoading} error={dayError} retry={retry} payment={dayPayment} globalPayment={payment} onPayment={setDayPayment} onClose={() => setSelectedDate(null)} onViewAll={() => { setLedgerDay(selectedDate); setPayment(payment || dayPayment); setDayPayment(""); setStatus(""); setKeyword(""); resetLedger(); pendingLedgerFocus.current = true; setSelectedDate(null) }} onExport={() => void exportCsv("day")} onOpen={openOrder} exporting={exporting} />}
+          </AnimatePresence>
         </div>
         <section className="wb-operations" aria-label={zh ? "经营待办" : "Operational actions"}><button type="button" onClick={() => inspectMetric("PAID")}><Box size={19} /><span>{zh ? "本周期待发货" : "Period awaiting delivery"} <b>{overview.summary.undelivered_count}</b> {zh ? "笔" : "orders"}</span><ChevronRight size={15} /></button><Link href="/admin/card-keys"><AlertCircle size={18} /><span>{zh ? "当前低库存" : "Current low stock"} <b>{overview.low_stock_products.length}</b> {zh ? "项" : "items"}</span><span className="wb-text">{zh ? "补货" : "Restock"}<ChevronRight size={14} /></span></Link></section>
       </>}

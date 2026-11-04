@@ -1,5 +1,7 @@
 "use client"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useLayoutEffect, useRef, useState } from "react"
+import { motion, useIsPresent } from "motion/react"
+import { useMotionPreference } from "@/hooks/use-motion-preference"
 import { ChevronLeft, ChevronRight, Download, Search, X, ClipboardList, ArrowUpRight, Loader2 } from "lucide-react"
 import { useLocale } from "@/lib/context"
 import { money } from "@/lib/dashboard"
@@ -49,8 +51,12 @@ export function WorkbenchDay({ date, data, loading, error, retry, payment, globa
   date: string; data: WorkbenchLedger | null; loading: boolean; error: string; retry: () => void; payment: string; globalPayment: string
   onPayment: (value: string) => void; onClose: () => void; onViewAll: () => void; onExport: () => void; onOpen: (id: string) => void; exporting: boolean
 }) {
+  const reduced = useMotionPreference()
+  const present = useIsPresent()
   const { locale, t } = useLocale(), zh = locale === "zh"
   const [mobile, setMobile] = useState(false)
+  const presentation = useRef(mobile)
+  useLayoutEffect(() => { if (present) presentation.current = mobile }, [present, mobile])
   useEffect(() => { const query = matchMedia("(max-width: 1199px)"); const update = () => setMobile(query.matches); update(); query.addEventListener("change", update); return () => query.removeEventListener("change", update) }, [])
   const title = zh ? `${date.slice(5, 7)}月${date.slice(8)}日订单` : `Orders · ${date.slice(5).replace("-", "/")}`
   const panel = <aside className="wb-day" aria-label={title}><header><h2>{title}</h2><button type="button" aria-label={zh ? "关闭当天订单" : "Close day orders"} onClick={onClose}><X size={19} /></button></header>
@@ -60,5 +66,14 @@ export function WorkbenchDay({ date, data, loading, error, retry, payment, globa
     {!loading && !error && <div className="wb-day-orders">{data?.list.map(order => <button type="button" className="wb-day-order" key={order.id} onClick={() => onOpen(order.id)} aria-label={`${zh ? "查看订单" : "Inspect order"} ${order.id}`}><span><b>{shortId(order.id)}</b><small>{orderTime(order.paid_at, locale)}</small><em>{order.payment_method ? getPaymentLabel(order.payment_method, t) : "—"}</em></span><span><span className="wb-day-product" title={order.product_title}>{order.product_title || "—"}</span><strong>{money(order.actual_amount)}</strong><WorkbenchStatus status={order.status} /></span></button>)}</div>}
     <footer><button type="button" className="wb-button is-primary" onClick={onViewAll} disabled={loading || !!error || !data?.pagination.total}>{zh ? `查看全部 ${data?.pagination.total || 0} 笔` : `View all ${data?.pagination.total || 0}`}<ChevronRight size={15} /></button><button type="button" className="wb-button" onClick={onExport} disabled={exporting || loading || !data?.pagination.total}><Download size={14} />{zh ? "导出当日" : "Export day"}</button></footer>
   </aside>
-  return mobile ? <WorkbenchDialog label={title} drawer onClose={onClose}>{panel}</WorkbenchDialog> : panel
+  return (present ? mobile : presentation.current) ? <WorkbenchDialog label={title} drawer onClose={onClose}>{panel}</WorkbenchDialog> : <motion.div
+    className="wb-day-slot"
+    data-present={present}
+    aria-hidden={!present}
+    inert={!present}
+    initial={reduced ? false : { width: 0, marginLeft: 0, opacity: 0 }}
+    animate={{ width: 280, marginLeft: 16, opacity: 1 }}
+    exit={{ width: 0, marginLeft: 0, opacity: 0 }}
+    transition={reduced ? { duration: 0 } : undefined}
+  >{panel}</motion.div>
 }

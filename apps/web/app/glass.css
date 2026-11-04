@@ -539,3 +539,112 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* Shared surfaces move between their controls and expanded states. */
+:root[data-ui="crystal"] :is(.store-categories button, .wb-periods button, .wb-segment button, .store-mobile-nav a) {
+  position: relative;
+  isolation: isolate;
+}
+
+:root[data-ui="crystal"] .fluid-selection {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: hsl(var(--primary) / .1);
+  box-shadow: inset 0 1px 0 hsl(var(--glass-shine) / var(--glass-highlight-opacity));
+}
+
+:root[data-ui="crystal"] :is(.store-categories button.active, .wb-periods button[aria-pressed="true"], .wb-segment button[aria-pressed="true"], .store-mobile-nav a.active) {
+  background: transparent;
+  box-shadow: none;
+}
+
+:root[data-ui="crystal"] .wb-periods .fluid-selection { background: hsl(var(--primary)); }
+
+:root[data-ui="crystal"] .fluid-menu-trigger {
+  position: relative;
+  isolation: isolate;
+  border-radius: 50%;
+  width: 40px;
+  min-width: 40px;
+  height: 40px;
+}
+
+:root[data-ui="crystal"] .fluid-menu-trigger > svg { position: relative; }
+
+:root[data-ui="crystal"] .fluid-menu-surface {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: hsl(var(--glass-fill) / var(--glass-opacity));
+  border: 1px solid hsl(var(--glass-line) / .6);
+  box-shadow: 0 16px 48px hsl(var(--glass-shadow) / .13), inset 0 1px 0 hsl(var(--glass-shine) / var(--glass-highlight-opacity));
+  -webkit-backdrop-filter: blur(26px) saturate(145%);
+  backdrop-filter: blur(26px) saturate(145%);
+}
+
+:root[data-ui="crystal"] .fluid-menu-trigger .fluid-menu-surface {
+  box-shadow: 0 2px 6px hsl(var(--glass-shadow) / .04), inset 0 1px 0 hsl(var(--glass-shine) / var(--glass-highlight-opacity));
+}
+
+:root[data-ui="crystal"] .fluid-popover {
+  --muted-foreground: var(--glass-muted);
+  --muted: var(--glass-canvas);
+  isolation: isolate;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  animation: none;
+}
+
+:root[data-ui="crystal"] .fluid-menu-content { position: relative; }
+:root[data-ui="crystal"] .ui-modal-overlay { z-index: 80; }
+:root[data-ui="crystal"] .fluid-popover :where(button, a):focus-visible { outline: 2px solid hsl(var(--primary)); outline-offset: 2px; }
+:root[data-ui="crystal"] .fluid-popover[aria-hidden="true"] { pointer-events: none; }
+:root[data-ui="crystal"] .store-product-list { position: relative; }
+
+:root[data-ui="crystal"] :is(.store-product, .fluid-menu-trigger, .store-categories button, .fluid-menu-surface, .fluid-menu-content, .fluid-selection, .wb-dialog, .wb-day-slot) {
+  transition-property: color, background-color, border-color, box-shadow;
+}
+
+:root[data-ui="crystal"] :is(.wb-day, .wb-dialog) { animation: none; }
+:root[data-ui="crystal"] .wb-day { background: hsl(var(--glass-fill)); backdrop-filter: none; }
+:root[data-ui="crystal"] .wb-chart-region { display: flex; gap: 0; align-items: stretch; }
+:root[data-ui="crystal"] .wb-chart-region > .wb-chart { flex: 1; min-width: 0; }
+:root[data-ui="crystal"] .wb-day-slot { flex-shrink: 0; overflow: clip; display: flex; border-radius: 20px; box-shadow: 0 12px 36px hsl(var(--glass-shadow) / .09); }
+:root[data-ui="crystal"] .wb-day-slot > .wb-day { position: static; width: 280px; flex-shrink: 0; height: 100%; max-height: none; box-shadow: none; }
+
+@media (min-width: 1200px) {
+  :root[data-ui="crystal"] .wb-chart-region > .wb-chart { min-height: 386px; }
+  :root[data-ui="crystal"] .wb-day-slot { height: 386px; }
+}
+
+@media (max-width: 1199px) {
+  :root[data-ui="crystal"] .wb-day-slot { display: none; }
+}
+
+::view-transition { pointer-events: none; }
+::view-transition-group(root) { animation: none; }
+::view-transition-image-pair(root) { isolation: isolate; }
+::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+::view-transition-old(root) { animation: fluid-theme-out 240ms ease-out both; mix-blend-mode: normal; z-index: 1; }
+
+@keyframes fluid-theme-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root[data-ui="crystal"] :is(.fluid-selection, .fluid-menu-surface, .fluid-menu-content, .store-product, .wb-dialog) {
+    transform: none !important;
+    filter: none !important;
+  }
+  :root[data-ui="crystal"] .fluid-menu-content { opacity: 1 !important; }
+  :root[data-ui="crystal"] .wb-day-slot[data-present="true"] { width: 280px !important; margin-left: 16px !important; opacity: 1 !important; }
+  :root[data-ui="crystal"] .wb-day-slot[data-present="false"] { width: 0 !important; margin-left: 0 !important; }
+  ::view-transition-old(root), ::view-transition-new(root) { animation: none !important; }
+}

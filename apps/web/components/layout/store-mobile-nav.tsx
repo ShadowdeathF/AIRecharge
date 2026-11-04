@@ -1,10 +1,14 @@
 "use client"
 import Link from "next/link"
+import { useId } from "react"
+import { LayoutGroup } from "motion/react"
+import { SelectionIndicator } from "@/components/ui/selection-indicator"
 import { usePathname } from "next/navigation"
 import { House, ShoppingCart, ClipboardList, User } from "lucide-react"
 import { useCart, useLocale } from "@/lib/context"
 import { cn } from "@/lib/utils"
 export function StoreMobileNav() {
+  const selectionGroup = useId()
   const pathname = usePathname()
   const { locale } = useLocale()
   const { itemCount } = useCart()
@@ -15,7 +19,8 @@ export function StoreMobileNav() {
     { href: "/order/query", label: zh ? "查订单" : "Orders", icon: ClipboardList, active: pathname.startsWith("/order/") || pathname === "/my/orders" },
     { href: "/profile", label: zh ? "我的" : "Account", icon: User, active: ["/profile", "/login", "/register"].includes(pathname) },
   ]
-  return <nav className="store-mobile-nav" data-testid="mobile-nav" aria-label={zh ? "底部导航" : "Mobile navigation"}>{links.map(link => <Link key={link.href} href={link.href} className={cn(link.active && "active")} aria-current={link.active ? "page" : undefined}>
+  return <LayoutGroup id={selectionGroup}><nav className="store-mobile-nav" data-testid="mobile-nav" aria-label={zh ? "底部导航" : "Mobile navigation"}>{links.map(link => <Link key={link.href} href={link.href} className={cn(link.active && "active")} aria-current={link.active ? "page" : undefined}>
+    {link.active && <SelectionIndicator />}
     <span className="relative"><link.icon size={21} strokeWidth={link.active ? 2.3 : 1.7} />{link.href === "/cart" && itemCount > 0 && <span className="store-cart-count">{itemCount > 99 ? "99+" : itemCount}</span>}</span><span>{link.label}</span>
-  </Link>)}</nav>
+  </Link>)}</nav></LayoutGroup>
 }

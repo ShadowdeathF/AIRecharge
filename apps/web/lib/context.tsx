@@ -8,6 +8,10 @@ import { mockCartData } from "./mock-data"
 import { initCurrencySymbols } from "./utils"
 import { getAuthToken, getGuestToken, getSessionOwner, getStoredUser, setStoredUser } from "./tab-session"
 import { getSiteColor } from "./appearance"
+import { MotionConfig } from "motion/react"
+import { flushSync } from "react-dom"
+import { useMotionPreference } from "@/hooks/use-motion-preference"
+import { fluidSpring, transitionTheme } from "./motion"
 
 // ============================================================
 // Theme
@@ -174,6 +178,7 @@ export function useSiteConfig() {
 // ============================================================
 
 export function AppProviders({ children, initialConfig }: { children: ReactNode; initialConfig?: SiteConfig | null }) {
+  const reducedMotion = useMotionPreference()
   // ==============================================================
   // 架构说明（重构版 - 零闪屏方案）：
   //
@@ -223,19 +228,13 @@ export function AppProviders({ children, initialConfig }: { children: ReactNode;
   }, [])
 
   const setTheme = useCallback((t: Theme) => {
-    setThemeState(t)
-    localStorage.setItem("theme", t)
-
-    // 立即同步更新 DOM 和 resolvedTheme
-    if (t === "system") {
-      const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches
+    transitionTheme(() => flushSync(() => {
+      setThemeState(t)
+      localStorage.setItem("theme", t)
+      const isDark = t === "system" ? window.matchMedia("(prefers-color-scheme: dark)").matches : t === "dark"
       document.documentElement.classList.toggle("dark", isDark)
       setResolvedTheme(isDark ? "dark" : "light")
-    } else {
-      const isDark = t === "dark"
-      document.documentElement.classList.toggle("dark", isDark)
-      setResolvedTheme(isDark ? "dark" : "light")
-    }
+    }))
   }, [])
 
   // ---------- Locale ----------
@@ -449,7 +448,9 @@ export function AppProviders({ children, initialConfig }: { children: ReactNode;
                     setPriceMax,
                   }}
                 >
-                  {children}
+                  <MotionConfig reducedMotion={reducedMotion ? "always" : "never"} transition={reducedMotion ? { duration: 0 } : fluidSpring}>
+                    {children}
+                  </MotionConfig>
                 </SearchContext.Provider>
               </SiteConfigContext.Provider>
             </CartContext.Provider>

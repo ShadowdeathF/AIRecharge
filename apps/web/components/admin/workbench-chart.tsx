@@ -1,5 +1,7 @@
 "use client"
-import { useEffect, useState } from "react"
+import { useEffect, useId, useState } from "react"
+import { LayoutGroup } from "motion/react"
+import { SelectionIndicator } from "@/components/ui/selection-indicator"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts"
 import { MousePointer2, ArrowUpRight } from "lucide-react"
 import { useLocale } from "@/lib/context"
@@ -11,15 +13,16 @@ export function WorkbenchChart({ trend, selectedDate, onSelect, compare, onCompa
   compare: boolean; onCompare: (value: boolean) => void; start: string; end: string
   metric: "sales_amount" | "order_count"; onMetric: (value: "sales_amount" | "order_count") => void
 }) {
+  const metricGroup = useId()
   const { locale } = useLocale(), zh = locale === "zh"
   const [day, setDay] = useState("")
   useEffect(() => setDay(""), [start, end])
   const amount = metric === "sales_amount"
   return <section className="wb-panel wb-chart" aria-label={zh ? "成交趋势" : "Sales trends"}>
-    <header className="wb-section-heading"><div><h2>{zh ? "成交趋势" : "Sales trends"}</h2><div className="wb-segment" aria-label={zh ? "趋势指标" : "Chart metric"}>
-      <button type="button" aria-pressed={amount} onClick={() => onMetric("sales_amount")}>{zh ? "金额" : "Amount"}</button>
-      <button type="button" aria-pressed={!amount} onClick={() => onMetric("order_count")}>{zh ? "订单" : "Orders"}</button>
-    </div></div><label className="wb-compare"><input type="checkbox" checked={compare} onChange={event => onCompare(event.target.checked)} />{zh ? "对比上一周期" : "Previous period"}</label></header>
+    <header className="wb-section-heading"><div><h2>{zh ? "成交趋势" : "Sales trends"}</h2><LayoutGroup id={metricGroup}><div className="wb-segment" aria-label={zh ? "趋势指标" : "Chart metric"}>
+      <button type="button" aria-pressed={amount} onClick={() => onMetric("sales_amount")}>{amount && <SelectionIndicator />}{zh ? "金额" : "Amount"}</button>
+      <button type="button" aria-pressed={!amount} onClick={() => onMetric("order_count")}>{!amount && <SelectionIndicator />}{zh ? "订单" : "Orders"}</button>
+    </div></LayoutGroup></div><label className="wb-compare"><input type="checkbox" checked={compare} onChange={event => onCompare(event.target.checked)} />{zh ? "对比上一周期" : "Previous period"}</label></header>
     <div className="wb-chart-legend"><span>{amount ? (zh ? "金额（元）" : "Amount (CNY)") : (zh ? "成交订单（笔）" : "Paid orders")}</span><div><i />{zh ? "本周期" : "Current"}{compare && <><i className="is-previous" />{zh ? "上一周期" : "Previous"}</>}</div></div>
     <div className="wb-chart-canvas"><ResponsiveContainer width="100%" height="100%"><LineChart data={trend} margin={{ top: 16, right: 20, left: -15, bottom: 6 }} onClick={state => { if (state?.activeLabel && trend.some(row => row.date === state.activeLabel)) onSelect(String(state.activeLabel)) }}>
       <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeDasharray="3 4" />

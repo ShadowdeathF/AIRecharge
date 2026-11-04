@@ -1,5 +1,6 @@
 "use client"
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react"
+import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from "react"
+import { AnimatePresence, LayoutGroup, motion } from "motion/react"
 import { Search, SlidersHorizontal, ShoppingCart, CreditCard, Mail, ChevronRight, X } from "lucide-react"
 import { useLocale, useSiteConfig, useSearch, type SortKey } from "@/lib/context"
 import { ProductCard } from "@/components/store/product-card"
@@ -7,7 +8,7 @@ import { CatalogPagination } from "@/components/store/catalog-pagination"
 import { paginateCatalog } from "@/lib/catalog-pagination"
 import { cn } from "@/lib/utils"
 import { useCustomerCatalog } from "@/hooks/use-customer-pricing"
-import { useContentMotion } from "@/hooks/use-content-motion"
+import { SelectionIndicator } from "@/components/ui/selection-indicator"
 import type { ProductCard as Product, Category } from "@/types"
 
 interface HomeContentProps { products: Product[]; categories: Category[]; siteSlogan: string; siteDescription: string }
@@ -17,6 +18,7 @@ const getMobile = () => window.matchMedia(mobileQuery).matches
 const getServerMobile = () => false
 
 export function HomeContent({ products: initialProducts, categories, siteSlogan, siteDescription }: HomeContentProps) {
+  const selectionId = useId()
   const customerPrices = useCustomerCatalog(initialProducts)
   const products = customerPrices.value
   const { locale, t } = useLocale()
@@ -49,7 +51,6 @@ export function HomeContent({ products: initialProducts, categories, siteSlogan,
   const featured = filtered.length > 0 && sortBy === "default" && !searchQuery.trim() && !activeFilters ? filtered[0] : null
   const compactProducts = featured ? filtered.slice(1) : filtered
   const pagination = paginateCatalog(compactProducts, page, pageSize)
-  const merchandiseRef = useContentMotion<HTMLDivElement>(`${category}:${sortBy}:${pagination.page}`)
   const changePage = (next: number) => {
     setPage(next)
     catalog.current?.scrollIntoView({ block: "start", behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" })
@@ -75,10 +76,10 @@ export function HomeContent({ products: initialProducts, categories, siteSlogan,
     <section ref={catalog} id="catalog" className="store-catalog" aria-label={zh ? "商品目录" : "Product catalog"}>
       {customerPrices.error && <p role="alert" className="text-sm text-destructive mb-3">{customerPrices.error}</p>}
       <div className="store-catalog-toolbar">
-        <div className="store-categories" role="group" aria-label={zh ? "商品分类" : "Categories"}>
-          <button type="button" onClick={() => setCategory(null)} aria-pressed={!category} className={cn(!category && "active")}>{t("home.allCategories")}</button>
-          {categories.map(cat => <button type="button" key={cat.id} onClick={() => setCategory(cat.id)} aria-pressed={category === cat.id} className={cn(category === cat.id && "active")}>{cat.name}</button>)}
-        </div>
+        <LayoutGroup id={selectionId}><div className="store-categories" role="group" aria-label={zh ? "商品分类" : "Categories"}>
+          <motion.button type="button" whileTap={{ scale: .96 }} onClick={() => setCategory(null)} aria-pressed={!category} className={cn(!category && "active")}>{!category && <SelectionIndicator />}{t("home.allCategories")}</motion.button>
+          {categories.map(cat => <motion.button type="button" whileTap={{ scale: .96 }} key={cat.id} onClick={() => setCategory(cat.id)} aria-pressed={category === cat.id} className={cn(category === cat.id && "active")}>{category === cat.id && <SelectionIndicator />}{cat.name}</motion.button>)}
+        </div></LayoutGroup>
         <div className="store-catalog-actions">
           <label className="store-catalog-search"><Search size={16} aria-hidden="true" /><input type="search" aria-label={zh ? "搜索商品" : "Search products"} placeholder={zh ? "搜索商品名称" : "Search products"} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} /></label>
           <button type="button" className={cn("store-filter-toggle", (filtersOpen || activeFilters) && "active")} aria-expanded={filtersOpen} aria-controls="catalog-filters" onClick={() => setFiltersOpen(!filtersOpen)}><SlidersHorizontal size={16} /><span>{zh ? "筛选" : "Filters"}</span>{activeFilters && <span className="store-filter-dot" />}</button>
@@ -91,10 +92,10 @@ export function HomeContent({ products: initialProducts, categories, siteSlogan,
         <label className="store-stock-filter"><input type="checkbox" checked={inStockOnly} onChange={e => setInStockOnly(e.target.checked)} />{t("home.filterInStock")}</label>
         <button type="button" className="store-reset" onClick={reset}><X size={15} />{zh ? "重置筛选" : "Reset filters"}</button>
       </div>}
-      {filtered.length > 0 ? <div ref={merchandiseRef} className={cn("store-merchandise", !featured && "store-merchandise-compact")} data-testid="catalog-grid">
+      {filtered.length > 0 ? <div className={cn("store-merchandise", !featured && "store-merchandise-compact")} data-testid="catalog-grid">
         {featured && <ProductCard product={featured} featured priority />}
         <div className="store-product-list">
-          {pagination.items.map((product, index) => <ProductCard key={product.id} product={product} priority={!featured && index === 0} />)}
+          <AnimatePresence initial={false} mode="popLayout">{pagination.items.map((product, index) => <ProductCard key={product.id} product={product} priority={!featured && index === 0} />)}</AnimatePresence>
         </div>
       </div> : <div className="store-empty" data-testid="catalog-empty"><Search size={36} strokeWidth={1.3} /><h2>{t("home.noProducts")}</h2><p>{zh ? "试试其他关键词，或调整筛选条件。" : "Try another keyword or adjust your filters."}</p><button type="button" onClick={reset}>{zh ? "重置筛选" : "Reset filters"}</button></div>}
       <CatalogPagination page={pagination.page} totalPages={pagination.totalPages} totalProducts={filtered.length} mobile={mobile} featured={Boolean(featured)} onPage={changePage} />

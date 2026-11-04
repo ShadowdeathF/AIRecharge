@@ -21,7 +21,6 @@ html:not(.dark) .storefront {
   -webkit-tap-highlight-color: transparent;
   overflow-wrap: anywhere;
 }
-html:not(.dark)[data-color="blue"] .storefront { --primary: 222 89% 55%; --ring: 222 89% 55%; }
 .storefront :where(button, a, input, select, summary):focus-visible { outline: 2px solid hsl(var(--primary)); outline-offset: 4px; }
 .storefront :where(input, select) { max-width: 100%; }
 .storefront .scheme-glow { box-shadow: none; }

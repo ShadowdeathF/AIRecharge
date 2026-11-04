@@ -6,6 +6,7 @@ import { Menu, Search, Globe, ExternalLink, User } from "lucide-react"
 import { AdminSidebar, ADMIN_LINKS } from "./admin-sidebar"
 import { useAuth, useLocale, useTheme } from "@/lib/context"
 import { cn } from "@/lib/utils"
+import { useContentMotion } from "@/hooks/use-content-motion"
 export function AdminShell({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -14,6 +15,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const { theme, setTheme } = useTheme()
   const { user } = useAuth()
   const pathname = usePathname()
+  const contentRef = useContentMotion<HTMLElement>(pathname)
   const zh = locale === "zh"
   const link = ADMIN_LINKS.find(l => pathname === l.href)
   useEffect(() => { setMobileOpen(false) }, [pathname])
@@ -39,7 +41,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
           <span className="admin-user"><span className="admin-avatar"><User size={17} /></span><span>{user?.username || (zh ? "管理员" : "Admin")}</span></span>
         </div>
       </header>
-      <main className="admin-main">{children}</main>
+      <main ref={contentRef} className="admin-main">{children}</main>
     </div>
   </div>
 }

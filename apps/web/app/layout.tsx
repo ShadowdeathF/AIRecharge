@@ -8,6 +8,7 @@ import { getSiteColor } from "@/lib/appearance"
 import { ThemeScript } from "./theme-script"
 import { DynamicFavicon } from "@/components/dynamic-favicon"
 import "./globals.css"
+import "./glass.css"
 
 const inter = localFont({ src: "../public/fonts/InterVariable.woff2", variable: "--font-inter", weight: "100 900", display: "swap" })
 
@@ -37,7 +38,7 @@ export default async function RootLayout({
   const config = await getSiteConfig().catch(() => null)
   const colorScheme = getSiteColor(config?.store_theme_color)
   return (
-    <html data-color={colorScheme} lang="zh" suppressHydrationWarning>
+    <html data-color={colorScheme} data-ui="crystal" lang="zh" suppressHydrationWarning>
       <head>
         <ThemeScript colorScheme={colorScheme} />
       </head>

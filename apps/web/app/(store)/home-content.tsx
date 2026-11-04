@@ -7,6 +7,7 @@ import { CatalogPagination } from "@/components/store/catalog-pagination"
 import { paginateCatalog } from "@/lib/catalog-pagination"
 import { cn } from "@/lib/utils"
 import { useCustomerCatalog } from "@/hooks/use-customer-pricing"
+import { useContentMotion } from "@/hooks/use-content-motion"
 import type { ProductCard as Product, Category } from "@/types"
 
 interface HomeContentProps { products: Product[]; categories: Category[]; siteSlogan: string; siteDescription: string }
@@ -27,7 +28,7 @@ export function HomeContent({ products: initialProducts, categories, siteSlogan,
   const [page, setPage] = useState(1)
   const catalog = useRef<HTMLElement>(null)
   const mobile = useSyncExternalStore(subscribeMobile, getMobile, getServerMobile)
-  const pageSize = mobile ? 3 : 6
+  const pageSize = 3
   useEffect(() => setPage(1), [category, searchQuery, sortBy, inStockOnly, priceMin, priceMax, pageSize])
   const filtered = useMemo(() => {
     let result = products.filter(p => (!category || p.category_id === category) && (!searchQuery.trim() || p.title.toLowerCase().includes(searchQuery.trim().toLowerCase())) && (!inStockOnly || p.stock_available > 0))
@@ -48,6 +49,7 @@ export function HomeContent({ products: initialProducts, categories, siteSlogan,
   const featured = filtered.length > 0 && sortBy === "default" && !searchQuery.trim() && !activeFilters ? filtered[0] : null
   const compactProducts = featured ? filtered.slice(1) : filtered
   const pagination = paginateCatalog(compactProducts, page, pageSize)
+  const merchandiseRef = useContentMotion<HTMLDivElement>(`${category}:${sortBy}:${pagination.page}`)
   const changePage = (next: number) => {
     setPage(next)
     catalog.current?.scrollIntoView({ block: "start", behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" })
@@ -89,7 +91,7 @@ export function HomeContent({ products: initialProducts, categories, siteSlogan,
         <label className="store-stock-filter"><input type="checkbox" checked={inStockOnly} onChange={e => setInStockOnly(e.target.checked)} />{t("home.filterInStock")}</label>
         <button type="button" className="store-reset" onClick={reset}><X size={15} />{zh ? "重置筛选" : "Reset filters"}</button>
       </div>}
-      {filtered.length > 0 ? <div className={cn("store-merchandise", !featured && "store-merchandise-compact")} data-testid="catalog-grid">
+      {filtered.length > 0 ? <div ref={merchandiseRef} className={cn("store-merchandise", !featured && "store-merchandise-compact")} data-testid="catalog-grid">
         {featured && <ProductCard product={featured} featured priority />}
         <div className="store-product-list">
           {pagination.items.map((product, index) => <ProductCard key={product.id} product={product} priority={!featured && index === 0} />)}

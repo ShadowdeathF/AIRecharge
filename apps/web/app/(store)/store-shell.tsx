@@ -11,6 +11,7 @@ import { StoreFooter } from "@/components/layout/store-footer"
 import { VisitTracker } from "@/components/store/visit-tracker"
 import { Modal } from "@/components/ui/modal"
 import { useSiteConfig, useAuth, useLocale } from "@/lib/context"
+import { useContentMotion } from "@/hooks/use-content-motion"
 
 function AnnouncementBar() {
   const { config } = useSiteConfig()
@@ -132,6 +133,7 @@ export function StoreShell({ siteName, children }: StoreShellProps) {
   const { config, isLoading } = useSiteConfig()
   const { user, isLoggedIn, authLoaded } = useAuth()
   const pathname = usePathname()
+  const contentRef = useContentMotion<HTMLElement>(pathname)
 
   // 维护模式判断需要 config + auth 都就绪才能准确决策
   const configReady = !isLoading && !!config
@@ -152,7 +154,7 @@ export function StoreShell({ siteName, children }: StoreShellProps) {
       {isMaintenance && isAdmin && <MaintenanceAdminBanner />}
       <AnnouncementBar />
       <StoreHeader siteName={siteName} />
-      <main className="store-main">{children}</main>
+      <main ref={contentRef} className="store-main">{children}</main>
       <StoreFooter />
       <StoreMobileNav />
       <PopupAnnouncement />

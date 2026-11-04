@@ -1,0 +1,541 @@
+/* Crystal Workspace shares site-managed brand colors across both surfaces. */
+:root[data-ui="crystal"] {
+  --glass-canvas: 214 32% 96%;
+  --glass-fill: 210 40% 100%;
+  --glass-ink: 221 40% 15%;
+  --glass-muted: 218 15% 43%;
+  --glass-line: 215 30% 85%;
+  --glass-shine: 0 0% 100%;
+  --glass-shadow: 218 34% 33%;
+  --glass-opacity: .78;
+  --glass-panel-opacity: .9;
+  --glass-control-opacity: .7;
+  --glass-highlight-opacity: .65;
+  --glass-radius: 20px;
+  --glass-ease: cubic-bezier(.22, 1, .36, 1);
+  --background: var(--glass-canvas);
+  --foreground: var(--glass-ink);
+  --card: var(--glass-fill);
+  --card-foreground: var(--glass-ink);
+  --popover: var(--glass-fill);
+  --popover-foreground: var(--glass-ink);
+  --border: var(--glass-line);
+}
+
+:root.dark[data-ui="crystal"] {
+  --glass-canvas: 214 16% 8%;
+  --glass-fill: 213 17% 14%;
+  --glass-ink: 210 24% 96%;
+  --glass-muted: 215 15% 72%;
+  --glass-line: 215 15% 30%;
+  --glass-shine: 210 24% 72%;
+  --glass-shadow: 220 45% 2%;
+  --glass-opacity: .84;
+  --glass-panel-opacity: .94;
+  --glass-control-opacity: .76;
+  --glass-highlight-opacity: .12;
+}
+
+:root[data-ui="crystal"] :is(.storefront, .admin-shell) {
+  --background: var(--glass-canvas);
+  --foreground: var(--glass-ink);
+  --card: var(--glass-fill);
+  --card-foreground: var(--glass-ink);
+  --popover: var(--glass-fill);
+  --popover-foreground: var(--glass-ink);
+  --muted: var(--glass-canvas);
+  --muted-foreground: var(--glass-muted);
+  --secondary: var(--glass-canvas);
+  --secondary-foreground: var(--glass-ink);
+  --accent: var(--glass-canvas);
+  --accent-foreground: var(--glass-ink);
+  --border: var(--glass-line);
+  --input: var(--glass-line);
+  background: hsl(var(--glass-canvas));
+}
+
+:root[data-ui="crystal"] :where(button, a, input, select, textarea) {
+  transition-property: color, background-color, border-color, box-shadow, transform;
+  transition-duration: 180ms;
+  transition-timing-function: var(--glass-ease);
+}
+
+:root[data-ui="crystal"] :where(input, select, textarea):focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 3px;
+}
+
+:root[data-ui="crystal"] :is(.store-header, .admin-sidebar, .admin-topbar, .store-catalog-toolbar, .wb-filters, .store-mobile-nav) {
+  background: hsl(var(--glass-fill) / var(--glass-opacity));
+  border: 1px solid hsl(var(--glass-line) / .6);
+  box-shadow: 0 8px 30px hsl(var(--glass-shadow) / .055), inset 0 1px 0 hsl(var(--glass-shine) / var(--glass-highlight-opacity));
+  -webkit-backdrop-filter: blur(24px) saturate(145%);
+  backdrop-filter: blur(24px) saturate(145%);
+}
+
+:root[data-ui="crystal"] :is(.store-popover, .ui-modal-panel, .wb-dialog, .wb-tooltip, .wb-day) {
+  color: hsl(var(--glass-ink));
+  background: hsl(var(--glass-fill) / var(--glass-panel-opacity));
+  border: 1px solid hsl(var(--glass-line) / .72);
+  border-radius: var(--glass-radius);
+  box-shadow: 0 20px 64px hsl(var(--glass-shadow) / .16), inset 0 1px 0 hsl(var(--glass-shine) / var(--glass-highlight-opacity));
+  -webkit-backdrop-filter: blur(26px) saturate(140%);
+  backdrop-filter: blur(26px) saturate(140%);
+}
+
+:root[data-ui="crystal"] :is(.store-popover, .ui-modal-panel, .wb-dialog[open]) {
+  animation: glass-pop-in 240ms var(--glass-ease);
+}
+
+:root[data-ui="crystal"] :is(.ui-modal-overlay, .admin-nav-backdrop) {
+  background: hsl(220 30% 5% / .4);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  animation: glass-fade-in 200ms ease-out;
+}
+
+:root[data-ui="crystal"] .wb-dialog::backdrop {
+  background: hsl(220 30% 5% / .4);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+/* Storefront */
+:root[data-ui="crystal"] .store-header {
+  top: 12px;
+  width: calc(100% - 48px);
+  max-width: 1368px;
+  margin: 14px auto 0;
+  border-radius: 22px;
+}
+
+:root[data-ui="crystal"] .store-header-inner {
+  height: 68px;
+  padding: 0 24px;
+  gap: 30px;
+}
+
+:root[data-ui="crystal"] .store-desktop-nav {
+  align-self: center;
+  gap: 4px;
+  padding: 4px;
+  background: hsl(var(--glass-canvas) / .72);
+  border-radius: 14px;
+}
+
+:root[data-ui="crystal"] .store-desktop-nav a {
+  min-height: 38px;
+  padding: 0 15px;
+  border-radius: 11px;
+}
+
+:root[data-ui="crystal"] .store-desktop-nav a.active {
+  background: hsl(var(--glass-fill) / .92);
+  box-shadow: 0 2px 8px hsl(var(--glass-shadow) / .06), inset 0 1px 0 hsl(var(--glass-shine) / var(--glass-highlight-opacity));
+}
+
+:root[data-ui="crystal"] :is(.store-desktop-nav a.active, .store-categories button.active)::after {
+  display: none;
+}
+
+:root[data-ui="crystal"] :is(.store-header-search, .store-catalog-search, .admin-global-search) {
+  background: hsl(var(--glass-canvas) / var(--glass-control-opacity));
+  border-color: hsl(var(--glass-line) / .58);
+  border-radius: 12px;
+  box-shadow: inset 0 1px 2px hsl(var(--glass-shadow) / .025);
+}
+
+:root[data-ui="crystal"] :is(.store-icon-button, .store-login, .store-primary-button) {
+  border-radius: 12px;
+}
+
+:root[data-ui="crystal"] :is(.store-login, .store-primary-button):hover {
+  box-shadow: 0 4px 12px hsl(var(--primary) / .18);
+  transform: translateY(-1px);
+}
+
+:root[data-ui="crystal"] :is(.store-login, .store-primary-button):active {
+  transform: translateY(1px) scale(.98);
+}
+
+:root[data-ui="crystal"] .store-main {
+  max-width: 1440px;
+  padding: 26px 36px 36px;
+}
+
+:root[data-ui="crystal"] .store-hero {
+  height: 192px;
+  border-radius: 22px;
+  border-color: hsl(var(--glass-line) / .55);
+  box-shadow: 0 8px 28px hsl(var(--glass-shadow) / .045);
+}
+
+:root[data-ui="crystal"] .store-hero-copy { padding: 35px 36px; }
+:root[data-ui="crystal"] .store-catalog { margin-top: 24px; }
+
+:root[data-ui="crystal"] .store-catalog-toolbar {
+  min-height: 66px;
+  padding: 8px 12px;
+  border-radius: 18px;
+  gap: 16px;
+}
+
+:root[data-ui="crystal"] .store-categories { gap: 4px; }
+
+:root[data-ui="crystal"] .store-categories button {
+  min-height: 42px;
+  padding: 0 16px;
+  border-radius: 12px;
+}
+
+:root[data-ui="crystal"] .store-categories button.active {
+  color: hsl(var(--primary));
+  background: hsl(var(--primary) / .09);
+  box-shadow: inset 0 1px 0 hsl(var(--glass-shine) / var(--glass-highlight-opacity)), 0 2px 7px hsl(var(--glass-shadow) / .035);
+}
+
+:root[data-ui="crystal"] .store-filters {
+  margin-top: 10px;
+  padding: 18px;
+  border: 1px solid hsl(var(--glass-line) / .6);
+  border-radius: 18px;
+  background: hsl(var(--glass-fill) / .82);
+  animation: glass-reveal-in 240ms var(--glass-ease);
+}
+
+:root[data-ui="crystal"] .store-merchandise {
+  --catalog-card-height: 128px;
+  --catalog-row-gap: 12px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.14fr);
+  gap: 18px;
+  margin-top: 18px;
+}
+
+:root[data-ui="crystal"] .store-product-list {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+:root[data-ui="crystal"] .store-product {
+  grid-template-columns: 144px minmax(0, 1fr);
+  border-color: hsl(var(--glass-line) / .6);
+  border-radius: 18px;
+  background: hsl(var(--glass-fill) / var(--glass-panel-opacity));
+  box-shadow: 0 4px 16px hsl(var(--glass-shadow) / .035), inset 0 1px 0 hsl(var(--glass-shine) / var(--glass-highlight-opacity));
+  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms var(--glass-ease);
+}
+
+:root[data-ui="crystal"] .store-product:hover {
+  border-color: hsl(var(--primary) / .32);
+  box-shadow: 0 9px 24px hsl(var(--glass-shadow) / .08);
+}
+
+:root[data-ui="crystal"] .store-product-image {
+  width: 126px;
+  height: 84px;
+  margin-left: 14px;
+  border-radius: 10px;
+}
+
+:root[data-ui="crystal"] .store-product-info { padding: 10px 16px; }
+:root[data-ui="crystal"] .store-product-title h2 { font-size: 16px; }
+
+:root[data-ui="crystal"] .store-merchandise > .store-product-featured {
+  display: flex;
+  grid-template-columns: none;
+}
+
+:root[data-ui="crystal"] .store-product-featured .store-product-image {
+  width: 100%;
+  height: 0;
+  margin: 0;
+  border-radius: 0;
+  flex: 1;
+}
+
+:root[data-ui="crystal"] .store-product-featured .store-product-info { height: 180px; padding: 15px 18px; }
+:root[data-ui="crystal"] .store-product-featured .store-product-title h2 { font-size: 23px; }
+:root[data-ui="crystal"] .store-product-featured .store-price { font-size: 26px; }
+:root[data-ui="crystal"] .store-featured-badge { border-radius: 9px; backdrop-filter: blur(12px); }
+
+:root[data-ui="crystal"] .store-merchandise-compact { grid-template-columns: minmax(0, 1fr); }
+:root[data-ui="crystal"] .store-merchandise-compact .store-product-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+:root[data-ui="crystal"] .store-pagination { border-top: 0; padding-top: 6px; }
+:root[data-ui="crystal"] .store-pagination-controls { padding: 5px; border-radius: 16px; background: hsl(var(--glass-fill) / .7); }
+:root[data-ui="crystal"] .store-pagination-controls button { border-color: transparent; border-radius: 11px; background: transparent; }
+:root[data-ui="crystal"] .store-pagination-controls button[aria-current="page"] { background: hsl(var(--primary)); }
+:root[data-ui="crystal"] .store-purchase-steps { border-color: hsl(var(--glass-line) / .5); }
+:root[data-ui="crystal"] .store-footer { background: transparent; border-color: hsl(var(--glass-line) / .45); }
+
+/* Existing product, checkout, account and management surfaces share the material. */
+:root[data-ui="crystal"] :is(.store-main, .admin-main) :where(.bg-background, .bg-card).border,
+:root[data-ui="crystal"] :is(.admin-panel, .fn-panel, .fn-metric, .wb-panel, .wb-operations) {
+  background: hsl(var(--glass-fill) / var(--glass-panel-opacity));
+  border-color: hsl(var(--glass-line) / .6);
+  border-radius: var(--glass-radius);
+  box-shadow: 0 5px 20px hsl(var(--glass-shadow) / .035), inset 0 1px 0 hsl(var(--glass-shine) / var(--glass-highlight-opacity));
+}
+
+:root[data-ui="crystal"] :is(.store-main, .admin-main) :where(input, select, textarea):not([type="checkbox"]):not([type="radio"]) {
+  border-radius: 10px;
+}
+
+/* Admin shell and data workspace */
+:root[data-ui="crystal"] .admin-shell::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: url("/images/store/hero-key.webp") center / cover no-repeat;
+  opacity: .06;
+  filter: blur(70px);
+}
+
+:root[data-ui="crystal"] .admin-sidebar {
+  top: 16px;
+  bottom: 16px;
+  left: 16px;
+  width: 212px;
+  border-radius: 22px;
+}
+
+:root[data-ui="crystal"] .admin-brand-row { height: 70px; padding: 0 20px; }
+:root[data-ui="crystal"] .admin-nav { gap: 4px; padding: 6px 12px 12px; }
+:root[data-ui="crystal"] .admin-nav a { min-height: 42px; padding: 0 12px; border-radius: 12px; }
+:root[data-ui="crystal"] .admin-nav a.admin-nav-section { margin-top: 15px; }
+:root[data-ui="crystal"] .admin-nav a.admin-nav-section::after { top: -10px; }
+
+:root[data-ui="crystal"] .admin-nav a.active {
+  background: hsl(var(--primary) / .1);
+  box-shadow: inset 0 1px 0 hsl(var(--glass-shine) / var(--glass-highlight-opacity)), 0 2px 6px hsl(var(--glass-shadow) / .035);
+}
+
+:root[data-ui="crystal"] .admin-nav a.active::before { left: 0; top: 12px; bottom: 12px; width: 2px; }
+:root[data-ui="crystal"] .admin-sidebar-footer { margin: 0 12px; padding: 10px 8px 14px; }
+:root[data-ui="crystal"] .admin-sidebar.is-collapsed { width: 76px; }
+:root[data-ui="crystal"] .admin-sidebar.is-collapsed .admin-brand-row { padding: 0 24px; }
+:root[data-ui="crystal"] .admin-workspace { position: relative; margin-left: 244px; padding-right: 24px; }
+:root[data-ui="crystal"] .admin-collapsed .admin-workspace { margin-left: 108px; }
+
+:root[data-ui="crystal"] .admin-topbar {
+  position: sticky;
+  top: 12px;
+  z-index: 30;
+  height: 66px;
+  margin-top: 16px;
+  padding: 0 22px;
+  border-radius: 20px;
+  gap: 16px;
+}
+
+:root[data-ui="crystal"] .admin-topbar-tools { gap: 14px; }
+:root[data-ui="crystal"] .admin-topbar-tools > button { border-radius: 10px; }
+:root[data-ui="crystal"] .admin-topbar-tools > button:hover { background: hsl(var(--glass-canvas)); }
+:root[data-ui="crystal"] .admin-main { padding: 26px 0 40px; }
+:root[data-ui="crystal"] .wb-heading h1 { font-size: 28px; }
+:root[data-ui="crystal"] .wb-filters { padding: 10px; border-radius: 16px; gap: 8px; }
+:root[data-ui="crystal"] .wb-periods { padding: 3px; border-color: transparent; border-radius: 12px; background: hsl(var(--glass-canvas) / .6); }
+:root[data-ui="crystal"] .wb-periods button { border: 0; border-radius: 9px; padding: 0 10px; }
+:root[data-ui="crystal"] .wb-periods button[aria-pressed="true"] { border-radius: 9px; box-shadow: inset 0 1px 0 hsl(var(--glass-shine) / .35), 0 3px 8px hsl(var(--primary) / .13); }
+:root[data-ui="crystal"] :is(.wb-date-form, .wb-time-basis) { border-radius: 10px; border-color: hsl(var(--glass-line) / .6); background: hsl(var(--glass-fill) / .65); }
+:root[data-ui="crystal"] .wb-summary { padding: 8px 0; }
+:root[data-ui="crystal"] .wb-metric { padding: 12px 18px; border-radius: 14px; }
+:root[data-ui="crystal"] .wb-metric:first-child { padding-left: 14px; }
+:root[data-ui="crystal"] .wb-metric:last-child { padding-right: 14px; }
+:root[data-ui="crystal"] .wb-metric + .wb-metric { border-color: hsl(var(--glass-line) / .6); }
+:root[data-ui="crystal"] .wb-metric:hover { background: hsl(var(--glass-fill) / .55); }
+:root[data-ui="crystal"] .workbench.has-inspector { grid-template-columns: minmax(0, 1fr); }
+:root[data-ui="crystal"] .wb-chart-region { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; min-width: 0; }
+:root[data-ui="crystal"] .wb-chart { padding: 20px 20px 12px; }
+:root[data-ui="crystal"] .wb-chart-canvas { height: 210px; }
+:root[data-ui="crystal"] .wb-segment { border-color: hsl(var(--glass-line) / .5); background: hsl(var(--glass-canvas) / .6); }
+:root[data-ui="crystal"] .wb-tooltip { border-radius: 14px; }
+:root[data-ui="crystal"] .wb-day { top: 98px; min-height: 0; max-height: min(660px, calc(100dvh - 120px)); padding: 19px 16px; animation: glass-inspector-in 260ms var(--glass-ease); }
+:root[data-ui="crystal"] .wb-day h2 { font-size: 17px; }
+:root[data-ui="crystal"] .wb-day .wb-state { min-height: 160px; padding: 24px 10px; }
+:root[data-ui="crystal"] .wb-day-filters { gap: 7px; }
+:root[data-ui="crystal"] .wb-day-filters select { min-width: 0; }
+:root[data-ui="crystal"] .wb-day > footer { padding-top: 16px; }
+:root[data-ui="crystal"] .wb-operations { border-radius: 14px; }
+:root[data-ui="crystal"] :is(.wb-button, .fn-button) { border-radius: 10px; min-height: 38px; }
+:root[data-ui="crystal"] :is(.wb-search, .wb-filters > select) { border-radius: 10px; }
+:root[data-ui="crystal"] .wb-ledger-tools { padding-bottom: 16px; }
+:root[data-ui="crystal"] :is(.wb-table-scroll th, .fn-table th) { background: hsl(var(--glass-canvas) / .75); color: hsl(var(--glass-muted)); }
+:root[data-ui="crystal"] :is(.wb-table-scroll td, .fn-table td) { border-color: hsl(var(--glass-line) / .45); }
+:root[data-ui="crystal"] .fn-tabs { padding: 4px; width: fit-content; max-width: 100%; background: hsl(var(--glass-fill) / .75); border: 1px solid hsl(var(--glass-line) / .6); border-radius: 14px; }
+:root[data-ui="crystal"] .fn-tabs button { border: 0; border-radius: 10px; min-height: 40px; padding: 9px 16px; }
+:root[data-ui="crystal"] .fn-tabs button.is-active { background: hsl(var(--primary) / .09); box-shadow: inset 0 1px 0 hsl(var(--glass-shine) / var(--glass-highlight-opacity)); }
+:root[data-ui="crystal"] .fn-metric { padding: 22px; }
+:root[data-ui="crystal"] .fn-panel { overflow: hidden; }
+:root[data-ui="crystal"] .fn-modal-header { background: hsl(var(--glass-fill) / .93); backdrop-filter: blur(18px); }
+:root[data-ui="crystal"] .finance-dialog.wb-dialog { border-radius: 22px; }
+:root[data-ui="crystal"] .finance-dialog.is-drawer { margin-right: 12px; border-radius: 22px; height: calc(100dvh - 24px); max-height: calc(100dvh - 24px); }
+:root[data-ui="crystal"] .wb-day-dialog:not(.finance-dialog) { width: min(420px, calc(100vw - 24px)); height: calc(100dvh - 24px); max-height: calc(100dvh - 24px); margin: 12px 12px 12px auto; }
+:root[data-ui="crystal"] .wb-day-dialog .wb-day { max-height: none; height: 100%; border: 0; border-radius: inherit; }
+
+@media (min-width: 1200px) {
+  :root[data-ui="crystal"] .wb-chart-region.has-inspector { grid-template-columns: minmax(0, 1fr) 280px; }
+  :root[data-ui="crystal"] .wb-chart-region .wb-day { position: static; align-self: stretch; }
+}
+
+@media (max-width: 1199px) {
+  :root[data-ui="crystal"] .admin-breadcrumb { gap: 8px; }
+  :root[data-ui="crystal"] .admin-global-search { max-width: 290px; }
+}
+
+@media (max-width: 1100px) {
+  :root[data-ui="crystal"] .store-header-inner { gap: 18px; padding: 0 18px; }
+  :root[data-ui="crystal"] .store-header-search { max-width: 180px; }
+  :root[data-ui="crystal"] .store-merchandise { grid-template-columns: minmax(0, 1fr); }
+  :root[data-ui="crystal"] .store-merchandise > .store-product-featured { display: grid; height: 180px; min-height: 180px; grid-template-columns: minmax(140px, .8fr) minmax(0, 2fr); }
+  :root[data-ui="crystal"] .store-product-featured .store-product-image { height: 100%; }
+  :root[data-ui="crystal"] .store-product-featured .store-product-info { height: 100%; }
+  :root[data-ui="crystal"] .store-merchandise-compact .store-product-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 767px) {
+  :root[data-ui="crystal"] .admin-sidebar { width: 240px; left: 12px; top: 12px; bottom: 12px; transform: translateX(calc(-100% - 24px)); z-index: 60; }
+  :root[data-ui="crystal"] .admin-sidebar.is-mobile-open { transform: translateX(0); }
+  :root[data-ui="crystal"] .admin-sidebar { visibility: hidden; transition: transform 240ms var(--glass-ease), visibility 240ms; }
+  :root[data-ui="crystal"] .admin-sidebar.is-mobile-open { visibility: visible; }
+  :root[data-ui="crystal"] .admin-sidebar.is-collapsed { width: 240px; }
+  :root[data-ui="crystal"] .admin-sidebar.is-collapsed .admin-brand-row { padding: 0 20px; }
+  :root[data-ui="crystal"] :is(.admin-workspace, .admin-collapsed .admin-workspace) { margin-left: 0; padding: 0 16px; }
+  :root[data-ui="crystal"] .admin-topbar { top: 8px; margin-top: 10px; padding: 0 14px; border-radius: 17px; }
+  :root[data-ui="crystal"] .admin-main { padding-top: 22px; }
+}
+
+@media (max-width: 800px) {
+  :root[data-ui="crystal"] .storefront { padding-bottom: calc(102px + env(safe-area-inset-bottom)); }
+  :root[data-ui="crystal"] .storefront:has(.store-cart-checkout) { padding-bottom: calc(176px + env(safe-area-inset-bottom)); }
+  :root[data-ui="crystal"] .store-header { width: calc(100% - 28px); top: 8px; margin-top: 10px; border-radius: 19px; }
+  :root[data-ui="crystal"] .store-header-inner { height: 60px; padding: 0 14px; gap: 10px; }
+  :root[data-ui="crystal"] .store-desktop-nav { display: none; }
+  :root[data-ui="crystal"] .store-main { padding: 20px 18px 28px; }
+  :root[data-ui="crystal"] .store-hero { height: 158px; border-radius: 18px; }
+  :root[data-ui="crystal"] .store-hero-copy { padding: 25px 24px; }
+  :root[data-ui="crystal"] .store-catalog-toolbar { gap: 8px; padding: 8px; }
+  :root[data-ui="crystal"] .store-categories { gap: 4px; }
+  :root[data-ui="crystal"] .store-categories button { min-height: 40px; padding: 0 14px; }
+  :root[data-ui="crystal"] .store-catalog-search { height: 42px; }
+  :root[data-ui="crystal"] .store-popover { position: fixed; top: 82px; right: 16px; width: min(292px, calc(100vw - 32px)); max-height: calc(100dvh - 104px); overflow-y: auto; }
+  :root[data-ui="crystal"] .store-mobile-nav { left: 14px; right: 14px; bottom: calc(10px + env(safe-area-inset-bottom)); min-height: 66px; padding: 6px 10px; border-radius: 23px; }
+  :root[data-ui="crystal"] .store-mobile-nav a { border-radius: 16px; min-height: 50px; }
+  :root[data-ui="crystal"] .store-mobile-nav a.active { background: hsl(var(--primary) / .075); }
+  :root[data-ui="crystal"] .store-cart-checkout { bottom: calc(88px + env(safe-area-inset-bottom)); left: 14px; right: 14px; border-radius: 18px; overflow: hidden; }
+  :root[data-ui="crystal"] :is(.store-main, .admin-main, .wb-dialog, .ui-modal-panel) :where(input, select, textarea):not([type="checkbox"]):not([type="radio"]) { font-size: 16px; }
+  :root[data-ui="crystal"] :is(.wb-button, .fn-button, .fn-tabs button, .wb-periods button, .wb-date-form) { min-height: 44px; }
+  :root[data-ui="crystal"] .wb-date-form input { width: 120px; }
+  :root[data-ui="crystal"] .fn-metric { padding: 16px; }
+}
+
+@media (max-width: 600px) {
+  :root[data-ui="crystal"] .store-header { width: calc(100% - 24px); }
+  :root[data-ui="crystal"] .store-header-inner { height: 56px; padding: 0 12px; gap: 6px; }
+  :root[data-ui="crystal"] .store-brand { font-size: 17px; gap: 7px; }
+  :root[data-ui="crystal"] .store-brand span { max-width: 143px; }
+  :root[data-ui="crystal"] .store-header-actions { gap: 2px; }
+  :root[data-ui="crystal"] .store-login { min-height: 38px; padding: 0 13px; }
+  :root[data-ui="crystal"] .store-main { padding: 18px 16px 24px; }
+  :root[data-ui="crystal"] .store-hero { height: 130px; }
+  :root[data-ui="crystal"] .store-hero-copy { padding: 20px 18px; }
+  :root[data-ui="crystal"] .store-hero h1 { font-size: 24px; }
+  :root[data-ui="crystal"] .store-catalog { margin-top: 16px; }
+  :root[data-ui="crystal"] .store-catalog-toolbar { border-radius: 16px; }
+  :root[data-ui="crystal"] .store-catalog-actions { gap: 8px; }
+  :root[data-ui="crystal"] .store-filter-toggle { padding-right: 6px; }
+  :root[data-ui="crystal"] .store-filters { padding: 12px; gap: 12px; }
+  :root[data-ui="crystal"] .store-filters :is(select, input[type="number"]) { width: 132px; }
+  :root[data-ui="crystal"] .store-merchandise { --catalog-card-height: 104px; --catalog-row-gap: 10px; margin-top: 14px; gap: 12px; }
+  :root[data-ui="crystal"] :is(.store-product-list, .store-merchandise-compact .store-product-list) { grid-template-columns: minmax(0, 1fr); }
+  :root[data-ui="crystal"] .store-product { grid-template-columns: 102px minmax(0, 1fr); border-radius: 16px; }
+  :root[data-ui="crystal"] .store-product-image { width: 84px; height: 58px; margin-left: 12px; border-radius: 9px; }
+  :root[data-ui="crystal"] .store-product-info { padding: 7px 10px; }
+  :root[data-ui="crystal"] .store-product-title h2 { font-size: 14px; }
+  :root[data-ui="crystal"] .store-product-bottom { min-height: 44px; }
+  :root[data-ui="crystal"] .store-merchandise > .store-product-featured { height: 154px; min-height: 154px; grid-template-columns: 102px minmax(0, 1fr); }
+  :root[data-ui="crystal"] .store-product-featured .store-product-image { width: 88px; height: 72px; margin-left: 12px; border-radius: 10px; }
+  :root[data-ui="crystal"] .store-product-featured .store-product-info { padding: 10px 12px 10px 6px; }
+  :root[data-ui="crystal"] .store-product-featured .store-product-title h2 { font-size: 18px; }
+  :root[data-ui="crystal"] .store-product-featured .store-product-description { font-size: 11px; line-height: 1.45; height: 2.9em; margin-top: 3px; }
+  :root[data-ui="crystal"] .store-product-featured .store-product-meta { margin-top: 2px; height: 16px; min-height: 16px; }
+  :root[data-ui="crystal"] .store-product-featured .store-product-bottom { margin-top: 3px; padding-top: 0; }
+  :root[data-ui="crystal"] .store-product-featured .store-price { font-size: 22px; }
+  :root[data-ui="crystal"] .store-featured-badge { top: 8px; left: 10px; right: auto; font-size: 9px; padding: 3px 5px; }
+  :root[data-ui="crystal"] .store-pagination { gap: 10px; }
+  :root[data-ui="crystal"] .store-pagination-controls { gap: 3px; }
+  :root[data-ui="crystal"] .store-pagination-controls button { min-width: 40px; padding: 0 8px; }
+  :root[data-ui="crystal"] .store-product-detail h1 { font-size: 24px; }
+  :root[data-ui="crystal"] .admin-workspace { padding: 0 12px; }
+  :root[data-ui="crystal"] .admin-collapsed .admin-workspace { padding: 0 12px; }
+  :root[data-ui="crystal"] .admin-topbar { height: 60px; gap: 8px; padding: 0 12px; }
+  :root[data-ui="crystal"] .admin-topbar-tools { gap: 8px; }
+  :root[data-ui="crystal"] .admin-topbar select { max-width: 68px; font-size: 12px; }
+  :root[data-ui="crystal"] .admin-main { padding-top: 20px; }
+  :root[data-ui="crystal"] .wb-heading h1 { font-size: 24px; }
+  :root[data-ui="crystal"] .wb-filters { padding: 9px; gap: 9px; }
+  :root[data-ui="crystal"] .wb-periods { width: 100%; overflow-x: auto; }
+  :root[data-ui="crystal"] .wb-periods button { flex: 1; padding: 0 10px; min-width: 44px; }
+  :root[data-ui="crystal"] .wb-date-form { width: 100%; gap: 5px; padding: 0 8px; }
+  :root[data-ui="crystal"] .wb-date-form input { width: 0; flex: 1; }
+  :root[data-ui="crystal"] .wb-date-form > svg { width: 13px; }
+  :root[data-ui="crystal"] .wb-date-form button { min-height: 44px; }
+  :root[data-ui="crystal"] .wb-summary { gap: 10px 0; }
+  :root[data-ui="crystal"] .wb-metric { padding: 10px 12px; }
+  :root[data-ui="crystal"] .wb-metric strong { font-size: 25px; }
+  :root[data-ui="crystal"] .wb-chart { padding: 16px 12px 10px; }
+  :root[data-ui="crystal"] .wb-chart-canvas { height: 195px; }
+  :root[data-ui="crystal"] .wb-section-heading h2 { font-size: 15px; }
+  :root[data-ui="crystal"] .wb-compare { font-size: 10px; }
+  :root[data-ui="crystal"] .wb-day-dialog:not(.finance-dialog) { width: calc(100vw - 24px); }
+  :root[data-ui="crystal"] .finance-dialog.is-drawer { width: calc(100vw - 24px); max-width: calc(100vw - 24px); }
+}
+
+@media (max-width: 350px) {
+  :root[data-ui="crystal"] .store-brand { font-size: 15px; gap: 5px; }
+  :root[data-ui="crystal"] .store-brand span { max-width: 116px; }
+  :root[data-ui="crystal"] .store-brand svg { width: 22px; }
+  :root[data-ui="crystal"] .store-header-inner { padding: 0 10px; }
+  :root[data-ui="crystal"] .store-icon-button { width: 29px; }
+  :root[data-ui="crystal"] .store-login { padding: 0 10px; }
+  :root[data-ui="crystal"] .store-main { padding-left: 12px; padding-right: 12px; }
+  :root[data-ui="crystal"] .store-filters :is(select, input[type="number"]) { width: 122px; }
+}
+
+@keyframes glass-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes glass-pop-in {
+  from { opacity: 0; transform: translateY(7px) scale(.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes glass-reveal-in {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes glass-inspector-in {
+  from { opacity: 0; transform: translateX(10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root[data-ui="crystal"], :root.dark[data-ui="crystal"] { --glass-opacity: 1; --glass-panel-opacity: 1; --glass-control-opacity: 1; }
+}
+
+@media (prefers-contrast: more), (prefers-reduced-transparency: reduce) {
+  :root[data-ui="crystal"], :root.dark[data-ui="crystal"] { --glass-opacity: 1; --glass-panel-opacity: 1; --glass-control-opacity: 1; }
+  :root[data-ui="crystal"] .admin-shell::before { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root[data-ui="crystal"] *,
+  :root[data-ui="crystal"] *::before,
+  :root[data-ui="crystal"] *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

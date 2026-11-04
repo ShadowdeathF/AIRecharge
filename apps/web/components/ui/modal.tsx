@@ -31,7 +31,7 @@ export function Modal({ open, onClose, children, className }: ModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 overflow-y-auto bg-black/50"
+      className="ui-modal-overlay fixed inset-0 z-50 overflow-y-auto bg-black/50"
       onMouseDown={(e) => {
         mouseDownOnBackdrop.current = e.target === e.currentTarget || (e.target as HTMLElement).dataset?.backdrop === "true"
       }}
@@ -47,7 +47,7 @@ export function Modal({ open, onClose, children, className }: ModalProps) {
       <div className="flex min-h-full items-center justify-center p-4" data-backdrop="true">
         <div
           className={cn(
-            "w-full rounded-xl border border-border bg-card shadow-xl",
+            "ui-modal-panel w-full rounded-xl border border-border bg-card shadow-xl",
             className
           )}
         >

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { Eye, EyeOff, LogIn } from "lucide-react"
 import { toast } from "sonner"
 import { useLocale, useAuth, useCart } from "@/lib/context"
@@ -15,8 +15,6 @@ export default function LoginPage() {
   const { setUser } = useAuth()
   const { refreshCart } = useCart()
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const redirectTo = searchParams.get("redirect")
 
   const [account, setAccount] = useState("")
   const [password, setPassword] = useState("")
@@ -33,6 +31,7 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!account.trim() || !password.trim()) return
+    const redirectTo = new URLSearchParams(window.location.search).get("redirect")
 
     setIsLoading(true)
     try {

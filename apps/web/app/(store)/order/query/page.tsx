@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
-import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Search, Copy, Download, FileText, CheckCircle2, X, Clock, HelpCircle, ExternalLink } from "lucide-react"
 import { toast } from "sonner"
@@ -22,7 +21,6 @@ interface RecentQuery {
 export default function OrderQueryPage() {
   const { t } = useLocale()
   const { config } = useSiteConfig()
-  const searchParams = useSearchParams()
   const [queryValue, setQueryValue] = useState("")
   const [orders, setOrders] = useState<OrderBrief[]>([])
   const [deliverResults, setDeliverResults] = useState<DeliverResult[]>([])
@@ -45,12 +43,12 @@ export default function OrderQueryPage() {
     setRecentQueries(recent)
 
     // Auto-query from URL params
-    const orderIdParam = searchParams.get("orderId")
+    const orderIdParam = new URLSearchParams(window.location.search).get("orderId")
     if (orderIdParam) {
       setQueryValue(orderIdParam)
       doSearch(orderIdParam, recent)
     }
-  }, [searchParams])
+  }, [])
 
   // Core search logic: query → deliver for DELIVERED orders
   const doSearch = useCallback(async (searchValue: string, currentRecent?: RecentQuery[]) => {

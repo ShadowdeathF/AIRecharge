@@ -420,7 +420,7 @@ export default function AdminProductsPage() {
         </div>
       ) : (
         <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto" role="region" tabIndex={0} aria-label={t("common.scrollTable")}>
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/30">
@@ -495,7 +495,7 @@ export default function AdminProductsPage() {
                 ))}
                 {products.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="py-12 text-center text-sm text-muted-foreground">{t("admin.noProductData")}</td>
+                    <td colSpan={7} className="py-12 text-center text-sm text-muted-foreground"><span className="admin-table-message">{t("admin.noProductData")}</span></td>
                   </tr>
                 )}
               </tbody>
@@ -520,7 +520,7 @@ export default function AdminProductsPage() {
               <h2 className="text-lg font-semibold text-foreground">
                 {editingProduct ? t("admin.editProduct") : t("admin.addProduct")}
               </h2>
-              <button type="button" onClick={handleCloseModal} className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors">
+              <button type="button" onClick={handleCloseModal} aria-label={t("common.close")} className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -847,7 +847,7 @@ export default function AdminProductsPage() {
       <Modal open={showImportModal !== null} onClose={() => setShowImportModal(null)} className="max-w-2xl">
             <div className="border-b border-border px-6 py-4 flex items-center justify-between">
               <h2 className="text-lg font-semibold text-foreground">{t("admin.importKeys")} — {showImportModal?.title}</h2>
-              <button type="button" onClick={() => setShowImportModal(null)} className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors">
+              <button type="button" onClick={() => setShowImportModal(null)} aria-label={t("common.close")} className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors">
                 <X className="h-5 w-5" />
               </button>
             </div>

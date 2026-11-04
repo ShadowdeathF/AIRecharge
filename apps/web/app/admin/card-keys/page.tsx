@@ -383,7 +383,7 @@ export default function AdminCardKeysPage() {
           </div>
 
           <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto" role="region" tabIndex={0} aria-label={t("common.scrollTable")}>
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border bg-muted/30">
@@ -442,7 +442,7 @@ export default function AdminCardKeysPage() {
                   ))}
                   {stockList.length === 0 && (
                     <tr>
-                      <td colSpan={7} className="py-8 text-center text-sm text-muted-foreground">{t("admin.noStockData")}</td>
+                      <td colSpan={7} className="py-8 text-center text-sm text-muted-foreground"><span className="admin-table-message">{t("admin.noStockData")}</span></td>
                     </tr>
                   )}
                 </tbody>
@@ -455,7 +455,7 @@ export default function AdminCardKeysPage() {
       {/* Import Records Tab */}
       {tab === "import" && (
         <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto" role="region" tabIndex={0} aria-label={t("common.scrollTable")}>
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/30">
@@ -486,7 +486,7 @@ export default function AdminCardKeysPage() {
                 ))}
                 {importBatches.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="py-8 text-center text-sm text-muted-foreground">{t("admin.noImportData")}</td>
+                    <td colSpan={5} className="py-8 text-center text-sm text-muted-foreground"><span className="admin-table-message">{t("admin.noImportData")}</span></td>
                   </tr>
                 )}
               </tbody>
@@ -505,7 +505,7 @@ export default function AdminCardKeysPage() {
               <button
                 type="button"
                 onClick={() => { setShowImportModal(false); setImportErrors({}) }}
-                className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+                aria-label={t("common.close")} className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -593,7 +593,7 @@ export default function AdminCardKeysPage() {
           <button
             type="button"
             onClick={() => setShowDetailModal(false)}
-            className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+            aria-label={t("common.close")} className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
@@ -606,7 +606,7 @@ export default function AdminCardKeysPage() {
           ) : detailKeys.length === 0 ? (
             <p className="py-12 text-center text-sm text-muted-foreground">暂无卡密数据</p>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto" role="region" tabIndex={0} aria-label={t("common.scrollTable")}>
               <table className="w-full text-sm table-fixed" onCopy={(e) => { const t = window.getSelection()?.toString(); if (t) { e.clipboardData.setData("text/plain", stripInvisible(t)); e.preventDefault() } }}>
                 <thead>
                   <tr className="border-b border-border bg-muted/30">

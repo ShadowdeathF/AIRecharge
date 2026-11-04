@@ -78,7 +78,7 @@ function handleUnauthorized(expectedToken: string | null) {
     redirecting = false
     return
   }
-  window.location.href = `/login?redirect=${encodeURIComponent(currentPath)}`
+  window.location.href = `/login?redirect=${encodeURIComponent(currentPath + window.location.search)}`
 }
 
 // ============================================================

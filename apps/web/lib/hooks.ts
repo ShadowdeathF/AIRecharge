@@ -16,7 +16,7 @@ export function useRequireAuth() {
   useEffect(() => {
     if (!authLoaded) return
     if (!isLoggedIn) {
-      router.replace(`/login?redirect=${encodeURIComponent(pathname)}`)
+      router.replace(`/login?redirect=${encodeURIComponent(pathname + window.location.search)}`)
     }
   }, [authLoaded, isLoggedIn, router, pathname])
 
@@ -36,7 +36,7 @@ export function useRequireAdmin() {
   useEffect(() => {
     if (!authLoaded) return
     if (!isLoggedIn) {
-      router.replace(`/login?redirect=${encodeURIComponent(pathname)}`)
+      router.replace(`/login?redirect=${encodeURIComponent(pathname + window.location.search)}`)
     } else if (user?.role !== "ADMIN") {
       router.replace("/")
     }

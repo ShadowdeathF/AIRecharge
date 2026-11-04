@@ -96,7 +96,7 @@ export default function AdminOperationLogsPage() {
 
       {/* Table */}
       <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto" role="region" tabIndex={0} aria-label={t("common.scrollTable")}>
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/30">
@@ -119,7 +119,7 @@ export default function AdminOperationLogsPage() {
                 </tr>
               ) : logs.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-sm text-muted-foreground">{t("admin.noLogData")}</td>
+                  <td colSpan={6} className="py-8 text-center text-sm text-muted-foreground"><span className="admin-table-message">{t("admin.noLogData")}</span></td>
                 </tr>
               ) : (
                 logs.map((log) => {

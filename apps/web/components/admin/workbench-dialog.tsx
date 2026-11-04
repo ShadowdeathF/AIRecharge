@@ -2,8 +2,7 @@
 import { useEffect, useRef, type ReactNode } from "react"
 import { motion, useIsPresent } from "motion/react"
 import { useMotionPreference } from "@/hooks/use-motion-preference"
-let openDialogs = 0
-let originalOverflow = ""
+import { lockPageScroll } from "@/lib/dialog-focus"
 export function WorkbenchDialog({ label, onClose, children, drawer = false, className = "" }: { label: string; onClose: () => void; children: ReactNode; drawer?: boolean; className?: string }) {
   const reduced = useMotionPreference()
   const present = useIsPresent()
@@ -12,13 +11,10 @@ export function WorkbenchDialog({ label, onClose, children, drawer = false, clas
     const element = ref.current
     const previousFocus = document.activeElement
     element?.showModal()
-    if (openDialogs === 0) originalOverflow = document.body.style.overflow
-    openDialogs++
-    document.body.style.overflow = "hidden"
+    const releaseScroll = lockPageScroll()
     return () => {
       element?.close()
-      openDialogs--
-      if (openDialogs === 0) document.body.style.overflow = originalOverflow
+      releaseScroll()
       if (previousFocus instanceof HTMLElement && previousFocus.isConnected) previousFocus.focus({ preventScroll: true })
     }
   }, [])

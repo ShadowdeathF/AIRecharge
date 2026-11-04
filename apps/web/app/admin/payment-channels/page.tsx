@@ -450,7 +450,7 @@ export default function AdminPaymentChannelsPage() {
           <button
             type="button"
             onClick={handleCloseModal}
-            className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+            aria-label={t("common.close")} className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
           >
             <X className="h-5 w-5" />
           </button>

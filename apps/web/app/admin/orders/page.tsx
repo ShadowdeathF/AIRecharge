@@ -208,7 +208,7 @@ export default function AdminOrdersPage() {
 
       {/* Table */}
       <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto" role="region" tabIndex={0} aria-label={t("common.scrollTable")}>
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/30">
@@ -235,7 +235,7 @@ export default function AdminOrdersPage() {
                 </tr>
               ) : orders.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="py-8 text-center text-sm text-muted-foreground">{t("admin.noOrderData")}</td>
+                  <td colSpan={10} className="py-8 text-center text-sm text-muted-foreground"><span className="admin-table-message">{t("admin.noOrderData")}</span></td>
                 </tr>
               ) : (
                 orders.map((order) => (
@@ -389,7 +389,7 @@ export default function AdminOrdersPage() {
               <button
                 type="button"
                 onClick={() => setShowDetail(null)}
-                className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+                aria-label={t("common.close")} className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
               >
                 <X className="h-5 w-5" />
               </button>

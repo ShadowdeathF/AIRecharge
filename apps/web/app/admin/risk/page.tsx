@@ -276,7 +276,7 @@ export default function AdminRiskPage() {
       {/* Flagged Orders */}
       {tab === "flagged" && (
         <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto" role="region" tabIndex={0} aria-label={t("common.scrollTable")}>
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/30">
@@ -292,7 +292,7 @@ export default function AdminRiskPage() {
               <tbody>
                 {flaggedOrders.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-8 text-center text-sm text-muted-foreground">{t("admin.noFlaggedOrders")}</td>
+                    <td colSpan={7} className="py-8 text-center text-sm text-muted-foreground"><span className="admin-table-message">{t("admin.noFlaggedOrders")}</span></td>
                   </tr>
                 ) : (
                   flaggedOrders.map((order) => (

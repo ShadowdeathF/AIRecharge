@@ -243,6 +243,7 @@ export function AppProviders({ children, initialConfig }: { children: ReactNode;
   useEffect(() => {
     const saved = (localStorage.getItem("locale") as Locale) || "zh"
     setLocaleState(saved)
+    document.documentElement.setAttribute("lang", saved === "en" ? "en" : "zh")
   }, [])
 
   const setLocale = useCallback((l: Locale) => {

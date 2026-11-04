@@ -1,7 +1,8 @@
 "use client"
 
-import { useEffect, useRef, type ReactNode } from "react"
+import { useEffect, useId, useRef, type ReactNode } from "react"
 import { cn } from "@/lib/utils"
+import { containDialogFocus, lockPageScroll } from "@/lib/dialog-focus"
 
 interface ModalProps {
   open: boolean
@@ -17,11 +18,33 @@ interface ModalProps {
  */
 export function Modal({ open, onClose, children, className }: ModalProps) {
   const mouseDownOnBackdrop = useRef(false)
+  const panel = useRef<HTMLDivElement>(null)
+  const titleId = useId()
+
+  useEffect(() => {
+    const element = panel.current
+    if (!open || !element) return
+    const heading = element.querySelector<HTMLElement>("h1, h2, h3")
+    if (heading) {
+      if (!heading.id) heading.id = titleId
+      element.setAttribute("aria-labelledby", heading.id)
+    } else {
+      element.setAttribute("aria-label", document.documentElement.lang === "en" ? "Dialog" : "对话框")
+    }
+    const releaseScroll = lockPageScroll()
+    const releaseFocus = containDialogFocus(element)
+    return () => { releaseFocus(); releaseScroll() }
+  }, [open, titleId])
 
   useEffect(() => {
     if (!open) return
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose()
+      if (document.activeElement?.closest("dialog[open]")) return
+      const scopes = document.querySelectorAll('[data-modal-focus="true"]')
+      if (e.key === "Escape" && scopes[scopes.length - 1] === panel.current) {
+        e.stopImmediatePropagation()
+        onClose()
+      }
     }
     document.addEventListener("keydown", handleEsc)
     return () => document.removeEventListener("keydown", handleEsc)
@@ -46,6 +69,10 @@ export function Modal({ open, onClose, children, className }: ModalProps) {
     >
       <div className="flex min-h-full items-center justify-center p-4" data-backdrop="true">
         <div
+          ref={panel}
+          role="dialog"
+          aria-modal="true"
+          tabIndex={-1}
           className={cn(
             "ui-modal-panel w-full rounded-xl border border-border bg-card shadow-xl",
             className

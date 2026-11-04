@@ -1,9 +1,12 @@
 "use client"
+import { useEffect, useRef } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Box, LayoutDashboard, ShoppingCart, Package, KeyRound, Users, Palette, CreditCard, Settings, ShieldCheck, ScrollText, FolderTree, ChevronLeft, X, LogOut, ExternalLink, ChartNoAxesCombined } from "lucide-react"
 import { useAuth, useLocale, useSiteConfig } from "@/lib/context"
 import { cn } from "@/lib/utils"
+import { useIsMobile } from "@/hooks/use-mobile"
+import { containDialogFocus, lockPageScroll } from "@/lib/dialog-focus"
 
 export const ADMIN_LINKS = [
   { href: "/admin/dashboard", zh: "经营分析", en: "Business overview", icon: LayoutDashboard },
@@ -26,17 +29,36 @@ export function AdminSidebar({ collapsed, mobileOpen, onCollapse, onClose }: { c
   const { locale } = useLocale()
   const { config } = useSiteConfig()
   const { logout } = useAuth()
+  const sidebar = useRef<HTMLElement>(null)
+  const isMobile = useIsMobile()
   const zh = locale === "zh"
+  useEffect(() => {
+    if (!isMobile || !mobileOpen || !sidebar.current) return
+    const releaseScroll = lockPageScroll()
+    const releaseFocus = containDialogFocus(sidebar.current)
+    const frame = requestAnimationFrame(() => sidebar.current?.querySelector<HTMLElement>('[aria-current="page"]')?.focus({ preventScroll: true }))
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") { event.preventDefault(); onClose() }
+    }
+    document.addEventListener("keydown", escape)
+    return () => {
+      document.removeEventListener("keydown", escape)
+      cancelAnimationFrame(frame)
+      releaseFocus()
+      releaseScroll()
+    }
+  }, [isMobile, mobileOpen, onClose])
+  useEffect(() => { if (!isMobile) onClose() }, [isMobile, onClose])
   return <>
     {mobileOpen && <button type="button" className="admin-nav-backdrop" onClick={onClose} aria-label={zh ? "关闭导航" : "Close navigation"} />}
-    <aside id="admin-navigation" className={cn("admin-sidebar", collapsed && "is-collapsed", mobileOpen && "is-mobile-open")}>
+    <aside ref={sidebar} id="admin-navigation" role={isMobile && mobileOpen ? "dialog" : undefined} aria-modal={isMobile && mobileOpen ? true : undefined} aria-label={zh ? "后台导航" : "Admin navigation"} tabIndex={-1} inert={isMobile && !mobileOpen} className={cn("admin-sidebar", collapsed && "is-collapsed", mobileOpen && "is-mobile-open")}>
       <div className="admin-brand-row"><Link href="/" className="admin-brand" title={config?.site_name || "AI Recharge"}>
         {config?.logo_url ? <img src={config.logo_url} alt="" /> : <Box size={27} strokeWidth={1.8} />}<span>{config?.site_name || "AI Recharge"}</span>
       </Link><button type="button" className="admin-sidebar-close" aria-label={zh ? "关闭导航" : "Close navigation"} onClick={onClose}><X size={19} /></button></div>
       <nav className="admin-nav" aria-label={zh ? "后台导航" : "Admin navigation"}>
         {ADMIN_LINKS.map((link,i) => <Link key={link.href} href={link.href} onClick={onClose} title={zh ? link.zh : link.en} aria-current={pathname === link.href ? "page" : undefined} className={cn(pathname === link.href && "active", i === 6 && "admin-nav-section")}><link.icon size={18} strokeWidth={1.7} /><span>{zh ? link.zh : link.en}</span></Link>)}
       </nav>
-      <div className="admin-sidebar-footer"><Link href="/"><ExternalLink size={17} /><span>{zh ? "查看商城" : "View store"}</span></Link><button type="button" onClick={logout}><LogOut size={17} /><span>{zh ? "退出登录" : "Sign out"}</span></button><button type="button" className="admin-collapse" onClick={onCollapse} aria-label={collapsed ? (zh ? "展开侧栏" : "Expand sidebar") : (zh ? "收起侧栏" : "Collapse sidebar")}><ChevronLeft size={17} className={cn(collapsed && "rotate-180")} /><span>{zh ? "收起侧栏" : "Collapse"}</span></button></div>
+      <div className="admin-sidebar-footer"><Link href="/"><ExternalLink size={17} /><span>{zh ? "查看商城" : "View store"}</span></Link><button type="button" onClick={logout}><LogOut size={17} /><span>{zh ? "退出登录" : "Sign out"}</span></button><button type="button" className="admin-collapse" onClick={onCollapse} aria-expanded={!collapsed} aria-label={collapsed ? (zh ? "展开侧栏" : "Expand sidebar") : (zh ? "收起侧栏" : "Collapse sidebar")}><ChevronLeft size={17} className={cn(collapsed && "rotate-180")} /><span>{zh ? "收起侧栏" : "Collapse"}</span></button></div>
     </aside>
   </>
 }

@@ -99,7 +99,7 @@ export default function AdminUsersPage() {
 
       {/* Table */}
       <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto" role="region" tabIndex={0} aria-label={t("common.scrollTable")}>
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/30">
@@ -122,7 +122,7 @@ export default function AdminUsersPage() {
                 </tr>
               ) : users.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-sm text-muted-foreground">{t("admin.noUserData")}</td>
+                  <td colSpan={6} className="py-8 text-center text-sm text-muted-foreground"><span className="admin-table-message">{t("admin.noUserData")}</span></td>
                 </tr>
               ) : (
                 users.map((user) => (

@@ -8,6 +8,9 @@ process.emitWarning = function (warning, ...args) {
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    viewTransition: true,
+  },
   output: 'standalone',   // Docker 部署必须：生成独立运行的 server.js，不依赖完整 node_modules
   typescript: {
     ignoreBuildErrors: true,

@@ -39,9 +39,9 @@ export function animateContent(element: HTMLElement | null, reducedMotion: boole
 
   return element.animate(
     [
-      { opacity: 0, transform: "translateY(8px)" },
-      { opacity: 1, transform: "translateY(0)" },
+      { opacity: 0, transform: "translateY(18px) scale(.985)", filter: "blur(6px)" },
+      { opacity: 1, transform: "translateY(0)", filter: "blur(0px)" },
     ],
-    { duration: 240, easing: "cubic-bezier(0.22, 1, 0.36, 1)", fill: "none" },
+    { duration: 420, easing: "cubic-bezier(0.22, 1, 0.36, 1)", fill: "none" },
   )
 }

@@ -27,7 +27,7 @@ test('content enters gently and returns an animation that its owner can cancel',
   assert.equal(calls[0].frames[0].opacity, 0);
   assert.equal(calls[0].frames[1].opacity, 1);
   assert.equal(calls[0].frames[1].transform, 'translateY(0)');
-  assert.equal(calls[0].options.duration, 240);
+  assert.equal(calls[0].options.duration, 420);
   assert.equal(calls[0].options.fill, 'none');
   result.cancel();
   assert.equal(cancelled, true);
@@ -47,7 +47,7 @@ test('missing elements and browsers without Web Animations render normally', () 
   assert.equal(animateContent({}, false), undefined);
 });
 
-function loadContentHook(element, preference) {
+function loadContentHook(element, preference, native = false) {
   const filename = path.join(__dirname, '../hooks/use-content-motion.ts');
   const source = ts.transpileModule(fs.readFileSync(filename, 'utf8'), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
@@ -64,6 +64,7 @@ function loadContentHook(element, preference) {
   };
   vm.runInNewContext('(function(module,exports,require){' + source + '\n})', {
     window: { matchMedia: () => preference },
+    document: native ? { startViewTransition() {} } : {},
   })(module, module.exports, requireDependency);
   return { useContentMotion: module.exports.useContentMotion, effects };
 }
@@ -110,4 +111,33 @@ test('content hook honors reduced motion on mount and cancels when the preferenc
   assert.equal(cancelled, 1);
   cleanup();
   assert.equal(listeners.size, 0);
+});
+
+test('native route transitions skip the secondary content animation', () => {
+  const preference = { matches: false };
+  let started = 0;
+  const { useContentMotion, effects } = loadContentHook({ animate() { started++; } }, preference, true);
+  useContentMotion('/cart', { native: true });
+  assert.equal(effects[0].effect(), undefined);
+  assert.equal(started, 0);
+});
+
+test('cached history restoration uses the fallback once even with native transitions available', () => {
+  const preference = { matches: false, addEventListener() {}, removeEventListener() {} };
+  let started = 0;
+  let cancelled = 0;
+  const { useContentMotion, effects } = loadContentHook({ animate() {
+    started++;
+    return { cancel() { cancelled++; } };
+  } }, preference, true);
+  const historyPath = { current: '/cart' };
+  useContentMotion('/cart', { native: true, historyPath });
+  const cleanup = effects[0].effect();
+  assert.equal(started, 1);
+  assert.equal(historyPath.current, null);
+  cleanup();
+  assert.equal(cancelled, 1);
+  useContentMotion('/profile', { native: true, historyPath });
+  assert.equal(effects[1].effect(), undefined);
+  assert.equal(started, 1);
 });

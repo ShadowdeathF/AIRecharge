@@ -638,7 +638,51 @@
   to { opacity: 0; }
 }
 
+@view-transition {
+  navigation: auto;
+  types: route;
+}
+
+.route-content { view-transition-name: page-content; }
+
+::view-transition-group(page-content) { animation: none; }
+::view-transition-old(page-content) { animation: fluid-theme-out 240ms ease-out both; }
+::view-transition-new(page-content) { animation: none; }
+
+::view-transition-old(.route-frame) { animation: route-frame-out 180ms ease-out both; }
+::view-transition-new(.route-frame) { animation: route-frame-in 260ms ease-out both; }
+::view-transition-group(.route-frame) { animation: none; }
+
+::view-transition-old(.route-content),
+:root:active-view-transition-type(route)::view-transition-old(page-content) {
+  animation: route-page-out 220ms cubic-bezier(.4, 0, 1, 1) both;
+  mix-blend-mode: normal;
+  transform-origin: 50% 60px;
+}
+
+::view-transition-new(.route-content),
+:root:active-view-transition-type(route)::view-transition-new(page-content) {
+  animation: route-page-in 420ms cubic-bezier(.22, 1, .36, 1) both;
+  mix-blend-mode: normal;
+  transform-origin: 50% 60px;
+}
+
+@keyframes route-page-out {
+  from { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+  to { opacity: 0; transform: translateY(-12px) scale(.985); filter: blur(5px); }
+}
+
+@keyframes route-page-in {
+  from { opacity: 0; transform: translateY(22px) scale(.985); filter: blur(6px); }
+  to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+
+@keyframes route-frame-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes route-frame-in { from { opacity: 0; } to { opacity: 1; } }
+
 @media (prefers-reduced-motion: reduce) {
+  @view-transition { navigation: none; }
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
   :root[data-ui="crystal"] :is(.fluid-selection, .fluid-menu-surface, .fluid-menu-content, .store-product, .wb-dialog) {
     transform: none !important;
     filter: none !important;

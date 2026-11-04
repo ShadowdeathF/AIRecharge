@@ -7,6 +7,7 @@ import { getSiteConfig } from "@/services/api-server"
 import { getSiteColor } from "@/lib/appearance"
 import { ThemeScript } from "./theme-script"
 import { DynamicFavicon } from "@/components/dynamic-favicon"
+import { RouteFrame } from "@/components/layout/page-transition"
 import "./globals.css"
 import "./glass.css"
 
@@ -45,7 +46,7 @@ export default async function RootLayout({
       <body className={`${inter.variable} font-sans antialiased`} suppressHydrationWarning>
         <AppProviders initialConfig={config}>
           <DynamicFavicon />
-          {children}
+          <RouteFrame>{children}</RouteFrame>
           <Toaster position="top-center" richColors closeButton />
         </AppProviders>
       </body>
